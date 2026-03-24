@@ -24,31 +24,48 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            background: black;
         }
 
-        /* Blurred background */
-        #bg {
+        /* Blurred background video — mirrors main video */
+        #bg-video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: blur(30px) brightness(0.4);
+            transform: scale(1.1);
+            z-index: 0;
+        }
+
+        /* Blurred background image (fallback for thumbnail) */
+        #bg-image {
             position: absolute;
             inset: 0;
             background-size: cover;
             background-position: center;
             filter: blur(30px) brightness(0.4);
             transform: scale(1.1);
+            z-index: 0;
         }
 
-        /* Main video */
+        /* Main portrait video centered */
         cast-media-player {
             position: relative;
             z-index: 1;
             height: 100vh;
             width: auto;
+            max-width: 60vw;
+            /* prevent too wide on landscape TV */
         }
     </style>
 </head>
 
 <body>
     <div id="container">
-        <div id="bg"></div>
+        <div id="bg-image"></div>
+        <video id="bg-video" muted autoplay loop playsinline></video>
         <cast-media-player></cast-media-player>
     </div>
 
@@ -56,14 +73,38 @@
         const context = cast.framework.CastReceiverContext.getInstance();
         const playerManager = context.getPlayerManager();
 
-        // Set thumbnail as blurred background
         playerManager.addEventListener(
-            cast.framework.events.EventType.MEDIA_STATUS,
+            cast.framework.events.EventType.PLAYER_LOADING,
             (event) => {
                 const media = playerManager.getMediaInformation();
-                if (media && media.metadata && media.metadata.images && media.metadata.images.length > 0) {
-                    document.getElementById('bg').style.backgroundImage =
-                        `url(${media.metadata.images[0].url})`;
+                if (!media) return;
+
+                // ✅ Try thumbnail first
+                if (media.metadata &&
+                    media.metadata.images &&
+                    media.metadata.images.length > 0) {
+                    const imgUrl = media.metadata.images[0].url;
+                    document.getElementById('bg-image').style.backgroundImage =
+                        `url(${imgUrl})`;
+                }
+
+                // ✅ Mirror main video as blurred background
+                const mainPlayer = document.querySelector('cast-media-player');
+                const bgVideo = document.getElementById('bg-video');
+                if (mainPlayer) {
+                    // sync bg video with main player
+                    const observer = new MutationObserver(() => {
+                        const video = mainPlayer.shadowRoot?.querySelector('video');
+                        if (video && bgVideo.src !== video.src) {
+                            bgVideo.src = video.src;
+                            bgVideo.play().catch(() => { });
+                        }
+                    });
+                    observer.observe(mainPlayer, {
+                        childList: true,
+                        subtree: true,
+                        attributes: true
+                    });
                 }
             }
         );
