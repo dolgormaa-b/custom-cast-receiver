@@ -28,6 +28,10 @@
             justify-content: center;
             align-items: center;
         }
+
+        video {
+            object-fit: contain !important;
+        }
     </style>
     <!-- Include CAF Receiver Library -->
     <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
@@ -38,6 +42,34 @@
     <cast-media-player></cast-media-player>
     <script>
         const context = cast.framework.CastReceiverContext.getInstance();
+        const playerManager = context.getPlayerManager();
+
+        // Intercept the Load request to ensure the UI behaves
+        playerManager.setMessageInterceptor(
+            cast.framework.messages.MessageType.LOAD,
+            loadRequestData => {
+                // Force the player to recognize this as a video that needs to fit
+                if (loadRequestData.media) {
+                    loadRequestData.media.metadata = loadRequestData.media.metadata || {};
+                    // You can explicitly set metadata here if needed
+                }
+                return loadRequestData;
+            }
+        );
+
+        // Monitor the player state to force aspect ratio if it jumps to "stretch"
+        playerManager.addEventListener(
+            cast.framework.events.EventType.PLAYER_STATE_CHANGED,
+            event => {
+                if (event.playerState === 'PLAYING') {
+                    const videoElement = document.getElementsByTagName('video')[0];
+                    if (videoElement) {
+                        videoElement.style.objectFit = 'contain';
+                    }
+                }
+            }
+        );
+
         context.start();
     </script>
 </body>
