@@ -22,13 +22,16 @@
             position: relative;
             width: 100vw;
             height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Blurred background */
+        /* ✅ Blurred background */
         #bg {
             position: absolute;
             inset: 0;
-            background: black;
+            background-color: black;
             background-size: cover;
             background-position: center;
             filter: blur(40px) brightness(0.3);
@@ -36,17 +39,13 @@
             z-index: 0;
         }
 
-        /* Portrait video centered */
+        /* ✅ Portrait video — full height */
         cast-media-player {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            height: 100vh;
-            width: auto;
-            aspect-ratio: 9/16;
-            /* ✅ portrait */
+            position: relative;
             z-index: 1;
+            height: 100vh !important;
+            width: 56.25vh !important;
+            /* 9:16 ratio = 56.25% of height */
         }
     </style>
 </head>
@@ -61,7 +60,6 @@
         const context = cast.framework.CastReceiverContext.getInstance();
         const playerManager = context.getPlayerManager();
 
-        // ✅ Set thumbnail as blurred background
         playerManager.addEventListener(
             cast.framework.events.EventType.PLAYER_LOADING,
             () => {
