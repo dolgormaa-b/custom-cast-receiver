@@ -54,6 +54,16 @@
             z-index: 1;
             transition: background-image 0.8s ease-in-out;
         }
+
+        /* Add this to your <style> block */
+        cast-media-player::part(video) {
+            object-fit: contain !important;
+        }
+
+        /* This is the standard backup */
+        video {
+            object-fit: contain !important;
+        }
     </style>
 </head>
 
@@ -68,62 +78,49 @@
         const playerManager = context.getPlayerManager();
         const bgBlur = document.getElementById('background-blur');
 
-        // --- Interceptors ---
+        // --- Helper to find the video element inside Shadow DOM ---
+        function getInternalVideo() {
+            // 1. Try standard query
+            let v = document.querySelector('video');
+            // 2. If not found, look inside the cast-media-player shadow root
+            if (!v) {
+                const player = document.querySelector('cast-media-player');
+                if (player && player.shadowRoot) {
+                    v = player.shadowRoot.querySelector('video');
+                }
+            }
+            return v;
+        }
 
         playerManager.setMessageInterceptor(
             cast.framework.messages.MessageType.LOAD,
             loadRequestData => {
-                // Ensure we have metadata and images for the blurred background
                 if (loadRequestData.media && loadRequestData.media.metadata) {
                     const images = loadRequestData.media.metadata.images;
                     if (images && images.length > 0) {
                         bgBlur.style.backgroundImage = `url(${images[0].url})`;
                     }
                 }
-
-                // Force video to buffered mode for smoother aspect ratio calculation
-                if (loadRequestData.media) {
-                    loadRequestData.media.streamType = cast.framework.messages.StreamType.BUFFERED;
-                }
-
                 return loadRequestData;
             }
         );
 
-        // --- Event Listeners to prevent Stretching ---
-
-        // This triggers as soon as the video metadata (dimensions) are known
-        playerManager.addEventListener(
-            cast.framework.events.EventType.METADATA_LOADED,
-            () => {
-                const videoElement = document.querySelector('video');
-                if (videoElement) {
-                    // Force the object-fit again just in case the TV tried to override
-                    videoElement.style.setProperty('object-fit', 'contain', 'important');
-                    console.log("🎬 Metadata loaded: Forcing 'contain' fit.");
-                }
-            }
-        );
-
-        // Safety check when playback actually starts
+        // --- The "Anti-Stretch" Logic ---
         playerManager.addEventListener(
             cast.framework.events.EventType.PLAYER_STATE_CHANGED,
             event => {
-                if (event.playerState === 'PLAYING') {
-                    const videoElement = document.querySelector('video');
+                if (event.playerState === 'PLAYING' || event.playerState === 'BUFFERING') {
+                    const videoElement = getInternalVideo();
                     if (videoElement) {
-                        videoElement.style.objectFit = 'contain';
+                        videoElement.style.setProperty('object-fit', 'contain', 'important');
+                        videoElement.style.setProperty('width', '100vw', 'important');
+                        videoElement.style.setProperty('height', '100vh', 'important');
                     }
                 }
             }
         );
 
-        // Start the receiver
-        const options = new cast.framework.CastReceiverOptions();
-        // Prevents the TV from sleeping if no input is received for a while
-        options.disableIdleTimeout = true;
-
-        context.start(options);
+        context.start();
     </script>
 </body>
 
