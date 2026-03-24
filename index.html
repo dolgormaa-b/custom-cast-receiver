@@ -2,87 +2,43 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
-    <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
-
-    <style>
+    <style type="text/css">
+        html,
         body {
-            --playback-logo-image: url('your-logo.png');
-            /* Optional */
-            background-color: black;
+            height: 100%;
+            width: 100%;
             margin: 0;
-            padding: 0;
+            background-color: black;
             overflow: hidden;
         }
 
-        #container {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-        }
-
-        /* 1. The Blurred Background */
-        #blurred-bg {
-            position: absolute;
-            width: 110%;
-            /* Slightly larger to hide white edges from blur */
-            height: 110%;
-            top: -5%;
-            left: -5%;
-            background-size: cover;
-            background-position: center;
-            filter: blur(50px) brightness(0.4);
-            z-index: 0;
-            transition: background-image 0.5s ease-in-out;
-        }
-
-        /* 2. The Official CAF Player (Handles Portrait perfectly) */
+        /* Style the player to fill the screen while maintaining aspect ratio */
         cast-media-player {
-            position: absolute;
-            top: 0;
-            left: 0;
+            --theme-hue: 200;
+            /* Customize color */
+            --player-background-color: black;
             width: 100%;
             height: 100%;
-            z-index: 1;
-            /* Force transparency so we see the blurred div behind it */
-            --theme-hue: 200;
-            background-color: transparent !important;
+        }
+
+        cast-media-player {
+            --player-background-color: black;
+            /* Ensure the media fits vertically and centers */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     </style>
+    <!-- Include CAF Receiver Library -->
+    <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
 </head>
 
 <body>
-    <div id="container">
-        <div id="blurred-bg"></div>
-        <cast-media-player></cast-media-player>
-    </div>
-
+    <!-- The Cast Media Player Element -->
+    <cast-media-player></cast-media-player>
     <script>
         const context = cast.framework.CastReceiverContext.getInstance();
-        const playerManager = context.getPlayerManager();
-        const bg = document.getElementById('blurred-bg');
-
-        // Intercept LOAD to update the background image
-        playerManager.setMessageInterceptor(
-            cast.framework.messages.MessageType.LOAD,
-            loadRequestData => {
-                if (loadRequestData.media && loadRequestData.media.metadata) {
-                    const metadata = loadRequestData.media.metadata;
-                    if (metadata.images && metadata.images.length > 0) {
-                        bg.style.backgroundImage = `url(${metadata.images[0].url})`;
-                    }
-                }
-                // ✅ Return the data! Do NOT return null. 
-                // This lets CAF handle the technical playback/scaling logic.
-                return loadRequestData;
-            }
-        );
-
-        // Required to make the background of the player transparent
-        const options = new cast.framework.CastReceiverOptions();
-        options.disableIdleTimeout = true;
-
-        context.start(options);
+        context.start();
     </script>
 </body>
 
