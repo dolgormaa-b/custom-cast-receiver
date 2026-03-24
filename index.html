@@ -59,36 +59,35 @@
         const context = cast.framework.CastReceiverContext.getInstance();
         const playerManager = context.getPlayerManager();
 
-        // ✅ Inject styles into shadow DOM
-        function injectShadowStyles() {
+        // ✅ Find and fix the actual video element inside shadow DOM
+        function fixVideoElement() {
             const player = document.querySelector('cast-media-player');
             if (!player || !player.shadowRoot) {
-                setTimeout(injectShadowStyles, 100);
+                setTimeout(fixVideoElement, 100);
                 return;
             }
 
-            const style = document.createElement('style');
-            style.textContent = `
-                #playerContainer,
-                .playerContainer,
-                video,
-                .video {
-                    width: 100vw !important;
-                    height: 100vh !important;
-                    object-fit: contain !important;
-                    background: transparent !important;
-                }
+            // ✅ Find the actual <video> tag
+            const video = player.shadowRoot.querySelector('video');
+            if (!video) {
+                setTimeout(fixVideoElement, 100);
+                return;
+            }
 
-                /* hide default controls */
-                .controls {
-                    display: none !important;
-                }
-            `;
-            player.shadowRoot.appendChild(style);
-            console.log('✅ Shadow styles injected');
+            console.log('✅ Found video element:', video);
+
+            // ✅ Apply styles directly to video element
+            video.style.objectFit = 'contain';
+            video.style.width = '100vw';
+            video.style.height = '100vh';
+            video.style.position = 'absolute';
+            video.style.top = '0';
+            video.style.left = '0';
+            video.style.background = 'transparent';
+
+            console.log('✅ Video styles applied');
         }
 
-        // ✅ Set thumbnail as blurred background
         playerManager.addEventListener(
             cast.framework.events.EventType.PLAYER_LOADING,
             () => {
@@ -97,19 +96,21 @@
                     document.getElementById('bg').style.backgroundImage =
                         `url(${media.metadata.images[0].url})`;
                 }
-                injectShadowStyles();
+                fixVideoElement();
             }
         );
 
-        // inject on load too
-        window.addEventListener('load', injectShadowStyles);
+        window.addEventListener('load', () => {
+            fixVideoElement();
+        });
 
         context.start();
 
-        // retry injection after context starts
-        setTimeout(injectShadowStyles, 500);
-        setTimeout(injectShadowStyles, 1000);
-        setTimeout(injectShadowStyles, 2000);
+        // ✅ Multiple retries
+        setTimeout(fixVideoElement, 500);
+        setTimeout(fixVideoElement, 1000);
+        setTimeout(fixVideoElement, 2000);
+        setTimeout(fixVideoElement, 3000);
     </script>
 </body>
 
