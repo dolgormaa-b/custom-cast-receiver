@@ -66,72 +66,34 @@
     <script>
         const context = cast.framework.CastReceiverContext.getInstance();
         const playerManager = context.getPlayerManager();
+
         const video = document.getElementById('video');
         const bg = document.getElementById('bg');
 
-        // ✅ Attach custom video element
-        playerManager.setMediaElement(video);
-
-        // 🔥 FORCE correct aspect ratio behavior
+        // 🚀 FULL MANUAL PLAYBACK (NO CAF CONTROL)
         playerManager.setMessageInterceptor(
             cast.framework.messages.MessageType.LOAD,
             request => {
-                console.log('📥 LOAD REQUEST:', request);
+                console.log("📥 LOAD:", request);
 
-                // Ensure metadata exists
-                request.media = request.media || {};
+                const url = request.media.contentUrl;
 
-                // Prevent CAF weird scaling
-                request.customData = request.customData || {};
-                request.customData.enforceAspectRatio = true;
+                // Set video manually
+                video.src = url;
+                video.load();
+                video.play();
 
-                return request;
-            }
-        );
-
-        // 🎬 When media starts loading
-        playerManager.addEventListener(
-            cast.framework.events.EventType.PLAYER_LOADING,
-            () => {
-                const media = playerManager.getMediaInformation();
-                console.log('🎬 Loading:', media);
-
-                // Set blurred background if thumbnail exists
-                const imageUrl = media?.metadata?.images?.[0]?.url;
-
+                // Background image
+                const imageUrl = request?.media?.metadata?.images?.[0]?.url;
                 if (imageUrl) {
                     bg.style.backgroundImage = `url(${imageUrl})`;
-                } else {
-                    bg.style.background = 'black';
                 }
+
+                return null; // 🚨 THIS disables CAF default player (important)
             }
         );
 
-        // ✅ After video is ready → enforce layout again
-        playerManager.addEventListener(
-            cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
-            () => {
-                console.log('✅ Load complete');
-
-                video.style.objectFit = 'contain';
-                video.style.width = 'auto';
-                video.style.height = 'auto';
-                video.style.maxWidth = '100vw';
-                video.style.maxHeight = '100vh';
-            }
-        );
-
-        // Optional debug
-        playerManager.addEventListener(
-            cast.framework.events.EventType.ERROR,
-            (e) => console.error('❌ Error:', e)
-        );
-
-        context.start({
-            disableIdleTimeout: true
-        });
-
-        console.log('🚀 Custom Receiver Started');
+        context.start();
     </script>
 </body>
 
