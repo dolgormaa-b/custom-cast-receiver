@@ -2,110 +2,37 @@
 <html>
 
 <head>
+    <meta charset="utf-8">
     <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
+            margin: 0;
             background: black;
-            width: 100vw;
-            height: 100vh;
             overflow: hidden;
         }
 
-        #container {
-            position: relative;
+        video {
             width: 100%;
             height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            object-fit: contain;
+            /* ✅ THIS FIXES STRETCHING */
             background: black;
-        }
-
-        /* Blurred background video — mirrors main video */
-        #bg-video {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            filter: blur(30px) brightness(0.4);
-            transform: scale(1.1);
-            z-index: 0;
-        }
-
-        /* Blurred background image (fallback for thumbnail) */
-        #bg-image {
-            position: absolute;
-            inset: 0;
-            background-size: cover;
-            background-position: center;
-            filter: blur(30px) brightness(0.4);
-            transform: scale(1.1);
-            z-index: 0;
-        }
-
-        /* Main portrait video centered */
-        cast-media-player {
-            position: relative;
-            z-index: 1;
-            height: 100vh;
-            width: auto;
-            max-width: 60vw;
-            /* prevent too wide on landscape TV */
         }
     </style>
 </head>
 
 <body>
-    <div id="container">
-        <div id="bg-image"></div>
-        <video id="bg-video" muted autoplay loop playsinline></video>
-        <cast-media-player></cast-media-player>
-    </div>
+    <cast-media-player></cast-media-player>
 
     <script>
         const context = cast.framework.CastReceiverContext.getInstance();
         const playerManager = context.getPlayerManager();
 
+        // Optional: debug logs
         playerManager.addEventListener(
-            cast.framework.events.EventType.PLAYER_LOADING,
+            cast.framework.events.EventType.MEDIA_STATUS,
             (event) => {
-                const media = playerManager.getMediaInformation();
-                if (!media) return;
-
-                // ✅ Try thumbnail first
-                if (media.metadata &&
-                    media.metadata.images &&
-                    media.metadata.images.length > 0) {
-                    const imgUrl = media.metadata.images[0].url;
-                    document.getElementById('bg-image').style.backgroundImage =
-                        `url(${imgUrl})`;
-                }
-
-                // ✅ Mirror main video as blurred background
-                const mainPlayer = document.querySelector('cast-media-player');
-                const bgVideo = document.getElementById('bg-video');
-                if (mainPlayer) {
-                    // sync bg video with main player
-                    const observer = new MutationObserver(() => {
-                        const video = mainPlayer.shadowRoot?.querySelector('video');
-                        if (video && bgVideo.src !== video.src) {
-                            bgVideo.src = video.src;
-                            bgVideo.play().catch(() => { });
-                        }
-                    });
-                    observer.observe(mainPlayer, {
-                        childList: true,
-                        subtree: true,
-                        attributes: true
-                    });
-                }
+                console.log('MEDIA STATUS:', event);
             }
         );
 
