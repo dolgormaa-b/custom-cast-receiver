@@ -11,10 +11,11 @@
             box-sizing: border-box;
         }
 
+        html,
         body {
-            background: black;
             width: 100vw;
             height: 100vh;
+            background: black;
             overflow: hidden;
         }
 
@@ -25,13 +26,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            background: black;
         }
 
-        /* ✅ Blurred background */
         #bg {
             position: absolute;
             inset: 0;
-            background-color: black;
             background-size: cover;
             background-position: center;
             filter: blur(40px) brightness(0.3);
@@ -39,13 +39,12 @@
             z-index: 0;
         }
 
-        /* ✅ Portrait video — full height */
         cast-media-player {
+            display: block;
             position: relative;
             z-index: 1;
-            height: 100vh !important;
-            width: 56.25vh !important;
-            /* 9:16 ratio = 56.25% of height */
+            width: 100vw;
+            height: 100vh;
         }
     </style>
 </head>
@@ -60,6 +59,36 @@
         const context = cast.framework.CastReceiverContext.getInstance();
         const playerManager = context.getPlayerManager();
 
+        // ✅ Inject styles into shadow DOM
+        function injectShadowStyles() {
+            const player = document.querySelector('cast-media-player');
+            if (!player || !player.shadowRoot) {
+                setTimeout(injectShadowStyles, 100);
+                return;
+            }
+
+            const style = document.createElement('style');
+            style.textContent = `
+                #playerContainer,
+                .playerContainer,
+                video,
+                .video {
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    object-fit: contain !important;
+                    background: transparent !important;
+                }
+
+                /* hide default controls */
+                .controls {
+                    display: none !important;
+                }
+            `;
+            player.shadowRoot.appendChild(style);
+            console.log('✅ Shadow styles injected');
+        }
+
+        // ✅ Set thumbnail as blurred background
         playerManager.addEventListener(
             cast.framework.events.EventType.PLAYER_LOADING,
             () => {
@@ -68,10 +97,19 @@
                     document.getElementById('bg').style.backgroundImage =
                         `url(${media.metadata.images[0].url})`;
                 }
+                injectShadowStyles();
             }
         );
 
+        // inject on load too
+        window.addEventListener('load', injectShadowStyles);
+
         context.start();
+
+        // retry injection after context starts
+        setTimeout(injectShadowStyles, 500);
+        setTimeout(injectShadowStyles, 1000);
+        setTimeout(injectShadowStyles, 2000);
     </script>
 </body>
 
