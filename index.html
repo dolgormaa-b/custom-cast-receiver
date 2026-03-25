@@ -69,14 +69,43 @@
             }
         }
 
+        // playerManager.setMessageInterceptor(
+        //     cast.framework.messages.MessageType.LOAD,
+        //     request => {
+        //         if (request.media && request.media.tracks && request.media.tracks.length > 0) {
+        //             const subTrack = request.media.tracks[0];
+        //             setTimeout(() => addSubtitleTrack(subTrack), 1000);
+        //         }
+        //         return request;
+        //     }
+        // );
+
         playerManager.setMessageInterceptor(
             cast.framework.messages.MessageType.LOAD,
             request => {
-                // Flutter-ээс ирсэн хадмалыг барьж авах
-                if (request.media && request.media.tracks && request.media.tracks.length > 0) {
-                    const subTrack = request.media.tracks[0];
-                    // Видео ачаалж дууссаны дараа хадмалыг нэмэх
-                    setTimeout(() => addSubtitleTrack(subTrack), 1000);
+                if (request.media && request.media.customData && request.media.customData.subtitleUrl) {
+                    const vttUrl = request.media.customData.subtitleUrl;
+                    const subName = request.media.customData.subtitleName || 'Mongolian';
+
+                    console.log('[SUBS] Received URL:', vttUrl);
+
+                    setTimeout(() => {
+                        const video = findVideo();
+                        if (video) {
+                            const oldTracks = video.querySelectorAll('track');
+                            oldTracks.forEach(t => t.remove());
+                            const track = document.createElement('track');
+                            track.kind = 'subtitles';
+                            track.label = subName;
+                            track.srclang = 'mn';
+                            track.src = vttUrl;
+                            track.default = true;
+
+                            video.appendChild(track);
+                            video.textTracks[0].mode = 'showing';
+                            console.log('[SUBS] Subtitle added to video element');
+                        }
+                    }, 1500);
                 }
                 return request;
             }
