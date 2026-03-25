@@ -26,6 +26,56 @@
 
     <script>
         const context = cast.framework.CastReceiverContext.getInstance();
+        const playerManager = context.getPlayerManager();
+
+        // TV screen size (Chromecast outputs 1920x1080)
+        const SCREEN_W = 1920;
+        const SCREEN_H = 1080;
+
+        function fixVideoSize() {
+            let video = null;
+
+            // Find the video element (shadow DOM or light DOM)
+            const cmp = document.querySelector('cast-media-player');
+            if (cmp && cmp.shadowRoot) {
+                video = cmp.shadowRoot.querySelector('video');
+            }
+            if (!video) {
+                video = document.querySelector('video');
+            }
+            if (!video) return;
+
+            const vw = video.videoWidth;
+            const vh = video.videoHeight;
+            if (!vw || !vh) return;
+
+            // Portrait video (height > width)
+            if (vh > vw) {
+                // Calculate px dimensions to fit within screen
+                const ratio = vw / vh;
+                const displayH = SCREEN_H;
+                const displayW = Math.round(SCREEN_H * ratio);
+
+                video.style.width = displayW + 'px';
+                video.style.height = displayH + 'px';
+                video.style.position = 'absolute';
+                video.style.top = '0';
+                video.style.left = ((SCREEN_W - displayW) / 2) + 'px';
+                video.style.objectFit = 'fill';
+                console.log('[FIX] Portrait video: ' + vw + 'x' + vh + ' -> ' + displayW + 'x' + displayH + 'px');
+            }
+        }
+
+        playerManager.addEventListener(
+            cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
+            () => {
+                // Wait for video metadata then fix
+                setTimeout(fixVideoSize, 500);
+                setTimeout(fixVideoSize, 2000);
+                setTimeout(fixVideoSize, 5000);
+            }
+        );
+
         context.start();
     </script>
 </body>
