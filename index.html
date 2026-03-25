@@ -19,6 +19,13 @@
             --progress-color: white;
             --splash-image: none;
         }
+
+        video::cue {
+            background: rgba(0, 0, 0, 0.6) !important;
+            color: white !important;
+            font-size: 20px !important;
+            line-height: normal !important;
+        }
     </style>
 </head>
 
@@ -37,6 +44,42 @@
             }
             return document.querySelector('video');
         }
+
+        function injectSubtitle(vttUrl, langName) {
+            const video = findVideo();
+            if (!video) return;
+
+            const oldTracks = video.querySelectorAll('track');
+            oldTracks.forEach(t => t.remove());
+
+            const track = document.createElement('track');
+            track.kind = 'subtitles';
+            track.label = langName || 'Mongolian';
+            track.srclang = 'mn';
+            track.src = vttUrl;
+            track.default = true;
+
+            video.appendChild(track);
+
+            if (video.textTracks && video.textTracks.length > 0) {
+                video.textTracks[0].mode = 'showing';
+            }
+            console.log('[SUBS] Injected VTT:', vttUrl);
+        }
+
+        playerManager.setMessageInterceptor(
+            cast.framework.messages.MessageType.LOAD,
+            request => {
+                if (request.media && request.media.tracks && request.media.tracks.length > 0) {
+                    const subTrack = request.media.tracks[0];
+                    const vttUrl = subTrack.trackContentId;
+                    const langName = subTrack.name;
+
+                    setTimeout(() => injectSubtitle(vttUrl, langName), 1500);
+                }
+                return request;
+            }
+        );
 
         let isPortrait = false;
         let fixInterval = null;
