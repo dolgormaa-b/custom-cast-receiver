@@ -35,44 +35,24 @@
         const context = cast.framework.CastReceiverContext.getInstance();
         const playerManager = context.getPlayerManager();
 
-        function forceContain(video) {
-            if (video.style.objectFit !== 'contain') {
-                video.style.setProperty('object-fit', 'contain', 'important');
-                video.style.setProperty('background', 'black', 'important');
-            }
-        }
-
-        function fixAllVideos() {
-            document.querySelectorAll('video').forEach(forceContain);
-
-            const cmp = document.querySelector('cast-media-player');
-            if (cmp && cmp.shadowRoot) {
-                cmp.shadowRoot.querySelectorAll('video').forEach(forceContain);
-            }
-        }
-
-        // Only watch for NEW elements being added (not style changes)
-        const observer = new MutationObserver(() => fixAllVideos());
-        observer.observe(document.body, { childList: true, subtree: true });
-
-        // Fix after media loads
+        // Fix portrait video: apply object-fit:contain after video loads
         playerManager.addEventListener(
             cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
             () => {
-                fixAllVideos();
-                setTimeout(fixAllVideos, 1000);
-                setTimeout(fixAllVideos, 3000);
-
-                // Observe shadow DOM for new child elements only
-                const cmp = document.querySelector('cast-media-player');
-                if (cmp && cmp.shadowRoot) {
-                    observer.observe(cmp.shadowRoot, { childList: true, subtree: true });
-                }
+                setTimeout(() => {
+                    const cmp = document.querySelector('cast-media-player');
+                    if (cmp && cmp.shadowRoot) {
+                        const video = cmp.shadowRoot.querySelector('video');
+                        if (video) {
+                            video.style.setProperty('object-fit', 'contain', 'important');
+                        }
+                    }
+                    document.querySelectorAll('video').forEach(v => {
+                        v.style.setProperty('object-fit', 'contain', 'important');
+                    });
+                }, 2000);
             }
         );
-
-        // Gentle periodic check every 5 seconds
-        setInterval(fixAllVideos, 5000);
 
         context.start();
     </script>
