@@ -45,6 +45,22 @@
             return document.querySelector('video');
         }
 
+        function setupVideoListeners() {
+            const video = findVideo();
+            if (!video || video.hasAttribute('listener-added')) return;
+
+            video.setAttribute('listener-added', 'true');
+
+            video.onended = function () {
+                playerManager.broadcastStatus(true);
+
+                context.sendCustomMessage('urn:x-cast:com.memo.drama.control', {
+                    command: 'video_finished'
+                });
+            };
+
+        }
+
         function injectSubtitle(vttUrl, langName) {
             const video = findVideo();
             if (!video) return;
@@ -101,7 +117,6 @@
                 const displayW = Math.round(screenH * ratio);
                 const leftOffset = Math.round((screenW - displayW) / 2);
 
-                // Use setProperty with !important — highest CSS priority
                 video.style.setProperty('width', displayW + 'px', 'important');
                 video.style.setProperty('height', displayH + 'px', 'important');
                 video.style.setProperty('position', 'absolute', 'important');
@@ -109,7 +124,6 @@
                 video.style.setProperty('left', leftOffset + 'px', 'important');
                 video.style.setProperty('object-fit', 'fill', 'important');
 
-                // Also inject a style tag into shadow DOM for extra persistence
                 const cmp = document.querySelector('cast-media-player');
                 if (cmp && cmp.shadowRoot && !cmp.shadowRoot.querySelector('#portrait-fix')) {
                     const style = document.createElement('style');
@@ -122,13 +136,13 @@
             }
         }
 
-        // Continuously enforce every 200ms while portrait
         fixInterval = setInterval(fixPortraitVideo, 200);
 
         playerManager.addEventListener(
             cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
             () => {
                 console.log('[EVENT] PLAYER_LOAD_COMPLETE');
+                setupVideoListeners();
                 fixPortraitVideo();
             }
         );
