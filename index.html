@@ -38,21 +38,19 @@
             return document.querySelector('video');
         }
 
+        let isPortrait = false;
+        let fixInterval = null;
+
         function fixPortraitVideo() {
             const video = findVideo();
-            if (!video) {
-                console.log('[FIX] No video element found');
-                return;
-            }
+            if (!video) return;
 
             const vw = video.videoWidth;
             const vh = video.videoHeight;
-            console.log('[FIX] Video dimensions: ' + vw + 'x' + vh);
-
             if (!vw || !vh) return;
 
-            // Portrait video detected (taller than wide)
             if (vh > vw) {
+                isPortrait = true;
                 const screenW = window.innerWidth || 1920;
                 const screenH = window.innerHeight || 1080;
                 const ratio = vw / vh;
@@ -60,46 +58,38 @@
                 const displayW = Math.round(screenH * ratio);
                 const leftOffset = Math.round((screenW - displayW) / 2);
 
-                video.style.width = displayW + 'px';
-                video.style.height = displayH + 'px';
-                video.style.position = 'absolute';
-                video.style.top = '0';
-                video.style.left = leftOffset + 'px';
-                video.style.objectFit = 'fill';
-                console.log('[FIX] Portrait -> ' + displayW + 'x' + displayH + ' left:' + leftOffset);
+                // Use setProperty with !important — highest CSS priority
+                video.style.setProperty('width', displayW + 'px', 'important');
+                video.style.setProperty('height', displayH + 'px', 'important');
+                video.style.setProperty('position', 'absolute', 'important');
+                video.style.setProperty('top', '0px', 'important');
+                video.style.setProperty('left', leftOffset + 'px', 'important');
+                video.style.setProperty('object-fit', 'fill', 'important');
+
+                // Also inject a style tag into shadow DOM for extra persistence
+                const cmp = document.querySelector('cast-media-player');
+                if (cmp && cmp.shadowRoot && !cmp.shadowRoot.querySelector('#portrait-fix')) {
+                    const style = document.createElement('style');
+                    style.id = 'portrait-fix';
+                    style.textContent = 'video { width: ' + displayW + 'px !important; height: ' + displayH + 'px !important; position: absolute !important; top: 0 !important; left: ' + leftOffset + 'px !important; object-fit: fill !important; }';
+                    cmp.shadowRoot.appendChild(style);
+                }
             } else {
-                // Landscape video — reset any overrides
-                video.style.width = '100%';
-                video.style.height = '100%';
-                video.style.position = '';
-                video.style.top = '';
-                video.style.left = '';
-                video.style.objectFit = '';
-                console.log('[FIX] Landscape — using default sizing');
+                isPortrait = false;
             }
         }
 
-        // Fix AFTER media is fully loaded and playing
-        playerManager.addEventListener(
-            cast.framework.events.EventType.PLAYING,
-            () => {
-                console.log('[EVENT] PLAYING');
-                setTimeout(fixPortraitVideo, 300);
-                setTimeout(fixPortraitVideo, 1500);
-                setTimeout(fixPortraitVideo, 3000);
-            }
-        );
+        // Continuously enforce every 200ms while portrait
+        fixInterval = setInterval(fixPortraitVideo, 200);
 
         playerManager.addEventListener(
             cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
             () => {
                 console.log('[EVENT] PLAYER_LOAD_COMPLETE');
-                setTimeout(fixPortraitVideo, 1000);
-                setTimeout(fixPortraitVideo, 3000);
+                fixPortraitVideo();
             }
         );
 
-        // Start the receiver — this must succeed for anything to work
         context.start();
         console.log('[RECEIVER] Started');
     </script>
