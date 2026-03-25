@@ -19,13 +19,6 @@
             --progress-color: white;
             --splash-image: none;
         }
-
-        /* Хадмалын харагдах байдлыг сайжруулах */
-        video::cue {
-            background: rgba(0, 0, 0, 0.6);
-            color: white;
-            font-size: 24px;
-        }
     </style>
 </head>
 
@@ -45,71 +38,8 @@
             return document.querySelector('video');
         }
 
-        // --- Хадмал (VTT) нэмэх функц ---
-        function addSubtitleTrack(trackData) {
-            const video = findVideo();
-            if (!video) return;
-
-            // Хуучин track-уудыг устгах
-            const oldTracks = video.querySelectorAll('track');
-            oldTracks.forEach(t => t.remove());
-
-            if (trackData && trackData.trackContentId) {
-                const track = document.createElement('track');
-                track.kind = 'subtitles';
-                track.label = trackData.name || 'Mongolian';
-                track.srclang = trackData.language || 'mn';
-                track.src = trackData.trackContentId;
-                track.default = true;
-                video.appendChild(track);
-
-                // Хадмалыг идэвхжүүлэх
-                video.textTracks[0].mode = 'showing';
-                console.log('[SUBS] Track added:', track.src);
-            }
-        }
-
-        playerManager.setMessageInterceptor(
-            cast.framework.messages.MessageType.LOAD,
-            request => {
-                if (request.media && request.media.tracks && request.media.tracks.length > 0) {
-                    const subTrack = request.media.tracks[0];
-                    setTimeout(() => addSubtitleTrack(subTrack), 1000);
-                }
-                return request;
-            }
-        );
-
-        // playerManager.setMessageInterceptor(
-        //     cast.framework.messages.MessageType.LOAD,
-        //     request => {
-        //         if (request.media && request.media.customData && request.media.customData.subtitleUrl) {
-        //             const vttUrl = request.media.customData.subtitleUrl;
-        //             const subName = request.media.customData.subtitleName || 'Mongolian';
-
-        //             console.log('[SUBS] Received URL:', vttUrl);
-
-        //             setTimeout(() => {
-        //                 const video = findVideo();
-        //                 if (video) {
-        //                     const oldTracks = video.querySelectorAll('track');
-        //                     oldTracks.forEach(t => t.remove());
-        //                     const track = document.createElement('track');
-        //                     track.kind = 'subtitles';
-        //                     track.label = subName;
-        //                     track.srclang = 'mn';
-        //                     track.src = vttUrl;
-        //                     track.default = true;
-
-        //                     video.appendChild(track);
-        //                     video.textTracks[0].mode = 'showing';
-        //                     console.log('[SUBS] Subtitle added to video element');
-        //                 }
-        //             }, 1500);
-        //         }
-        //         return request;
-        //     }
-        // );
+        let isPortrait = false;
+        let fixInterval = null;
 
         function fixPortraitVideo() {
             const video = findVideo();
@@ -120,6 +50,7 @@
             if (!vw || !vh) return;
 
             if (vh > vw) {
+                isPortrait = true;
                 const screenW = window.innerWidth || 1920;
                 const screenH = window.innerHeight || 1080;
                 const ratio = vw / vh;
@@ -127,6 +58,7 @@
                 const displayW = Math.round(screenH * ratio);
                 const leftOffset = Math.round((screenW - displayW) / 2);
 
+                // Use setProperty with !important — highest CSS priority
                 video.style.setProperty('width', displayW + 'px', 'important');
                 video.style.setProperty('height', displayH + 'px', 'important');
                 video.style.setProperty('position', 'absolute', 'important');
@@ -134,30 +66,32 @@
                 video.style.setProperty('left', leftOffset + 'px', 'important');
                 video.style.setProperty('object-fit', 'fill', 'important');
 
+                // Also inject a style tag into shadow DOM for extra persistence
                 const cmp = document.querySelector('cast-media-player');
                 if (cmp && cmp.shadowRoot && !cmp.shadowRoot.querySelector('#portrait-fix')) {
                     const style = document.createElement('style');
                     style.id = 'portrait-fix';
-                    style.textContent = `
-                        video { 
-                            width: ${displayW}px !important; 
-                            height: ${displayH}px !important; 
-                            position: absolute !important; 
-                            top: 0 !important; 
-                            left: ${leftOffset}px !important; 
-                            object-fit: fill !important; 
-                        }
-                        video::cue {
-                            font-size: 1.5em !important;
-                        }
-                    `;
+                    style.textContent = 'video { width: ' + displayW + 'px !important; height: ' + displayH + 'px !important; position: absolute !important; top: 0 !important; left: ' + leftOffset + 'px !important; object-fit: fill !important; }';
                     cmp.shadowRoot.appendChild(style);
                 }
+            } else {
+                isPortrait = false;
             }
         }
 
-        setInterval(fixPortraitVideo, 200);
+        // Continuously enforce every 200ms while portrait
+        fixInterval = setInterval(fixPortraitVideo, 200);
+
+        playerManager.addEventListener(
+            cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
+            () => {
+                console.log('[EVENT] PLAYER_LOAD_COMPLETE');
+                fixPortraitVideo();
+            }
+        );
+
         context.start();
+        console.log('[RECEIVER] Started');
     </script>
 </body>
 
