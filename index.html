@@ -17,7 +17,7 @@
             height: 100vh;
             --theme-hue: 0;
             --progress-color: white;
-            background-color: black !important;
+            --splash-image: none;
         }
     </style>
 </head>
@@ -32,70 +32,66 @@
         function findVideo() {
             const cmp = document.querySelector('cast-media-player');
             if (cmp && cmp.shadowRoot) {
-                return cmp.shadowRoot.querySelector('video');
+                const v = cmp.shadowRoot.querySelector('video');
+                if (v) return v;
             }
             return document.querySelector('video');
         }
+
+        let isPortrait = false;
+        let fixInterval = null;
 
         function fixPortraitVideo() {
             const video = findVideo();
             if (!video) return;
 
-            // Видеоны жинхэнэ хэмжээг авна
             const vw = video.videoWidth;
             const vh = video.videoHeight;
+            if (!vw || !vh) return;
 
-            // Хэрэв видео ачаалж дуусаагүй бол (0 бол) алгасна
-            if (vw === 0 || vh === 0) return;
-
-            // Зөвхөн босоо (Portrait) үед ажиллана
             if (vh > vw) {
-                const screenW = window.innerWidth;
-                const screenH = window.innerHeight;
-
-                // Харьцааг тооцоолох (Жишээ нь: 720/1280 = 0.5625)
+                isPortrait = true;
+                const screenW = window.innerWidth || 1920;
+                const screenH = window.innerHeight || 1080;
                 const ratio = vw / vh;
                 const displayH = screenH;
                 const displayW = Math.round(screenH * ratio);
                 const leftOffset = Math.round((screenW - displayW) / 2);
 
-                // 1. Хүчээр Style-ыг нь тулгах (Inline style)
+                // Use setProperty with !important — highest CSS priority
                 video.style.setProperty('width', displayW + 'px', 'important');
                 video.style.setProperty('height', displayH + 'px', 'important');
-                video.style.setProperty('left', leftOffset + 'px', 'important');
                 video.style.setProperty('position', 'absolute', 'important');
                 video.style.setProperty('top', '0px', 'important');
+                video.style.setProperty('left', leftOffset + 'px', 'important');
                 video.style.setProperty('object-fit', 'fill', 'important');
 
-                // 2. Shadow DOM дотор Style tag нэг удаа нэмэх
+                // Also inject a style tag into shadow DOM for extra persistence
                 const cmp = document.querySelector('cast-media-player');
-                if (cmp && cmp.shadowRoot && !cmp.shadowRoot.querySelector('#portrait-fix-style')) {
+                if (cmp && cmp.shadowRoot && !cmp.shadowRoot.querySelector('#portrait-fix')) {
                     const style = document.createElement('style');
-                    style.id = 'portrait-fix-style';
-                    style.textContent = `
-                        video { 
-                            width: ${displayW}px !important; 
-                            height: ${displayH}px !important; 
-                            left: ${leftOffset}px !important; 
-                            position: absolute !important; 
-                            object-fit: fill !important; 
-                        }
-                    `;
+                    style.id = 'portrait-fix';
+                    style.textContent = 'video { width: ' + displayW + 'px !important; height: ' + displayH + 'px !important; position: absolute !important; top: 0 !important; left: ' + leftOffset + 'px !important; object-fit: fill !important; }';
                     cmp.shadowRoot.appendChild(style);
                 }
+            } else {
+                isPortrait = false;
             }
         }
 
-        // 200ms тутамд видеоны хэмжээг "Цоожлох" (Lock)
-        setInterval(fixPortraitVideo, 200);
+        // Continuously enforce every 200ms while portrait
+        fixInterval = setInterval(fixPortraitVideo, 200);
 
-        // Metadata ачаалагдах үед шууд нэг удаа ажиллуулах
         playerManager.addEventListener(
-            cast.framework.events.EventType.METADATA_LOADED,
-            fixPortraitVideo
+            cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
+            () => {
+                console.log('[EVENT] PLAYER_LOAD_COMPLETE');
+                fixPortraitVideo();
+            }
         );
 
         context.start();
+        console.log('[RECEIVER] Started');
     </script>
 </body>
 
