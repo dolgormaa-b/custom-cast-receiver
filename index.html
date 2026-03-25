@@ -35,89 +35,44 @@
         const context = cast.framework.CastReceiverContext.getInstance();
         const playerManager = context.getPlayerManager();
 
-        /**
-         * Aggressively enforce object-fit:contain on ALL video elements,
-         * including those inside shadow DOMs. Uses MutationObserver to
-         * re-apply whenever the Cast SDK changes styles.
-         */
         function forceContain(video) {
-            video.style.setProperty('object-fit', 'contain', 'important');
-            video.style.setProperty('background', 'black', 'important');
+            if (video.style.objectFit !== 'contain') {
+                video.style.setProperty('object-fit', 'contain', 'important');
+                video.style.setProperty('background', 'black', 'important');
+            }
         }
 
-        function findAndFixVideos() {
-            // Fix videos in the light DOM
+        function fixAllVideos() {
             document.querySelectorAll('video').forEach(forceContain);
 
-            // Fix videos inside cast-media-player shadow DOM
             const cmp = document.querySelector('cast-media-player');
             if (cmp && cmp.shadowRoot) {
                 cmp.shadowRoot.querySelectorAll('video').forEach(forceContain);
-
-                // Also look for nested shadow DOMs (the SDK nests components)
-                cmp.shadowRoot.querySelectorAll('*').forEach(el => {
-                    if (el.shadowRoot) {
-                        el.shadowRoot.querySelectorAll('video').forEach(forceContain);
-                    }
-                });
             }
         }
 
-        // Watch for any DOM changes and re-apply fix
-        const observer = new MutationObserver(() => {
-            findAndFixVideos();
-        });
+        // Only watch for NEW elements being added (not style changes)
+        const observer = new MutationObserver(() => fixAllVideos());
+        observer.observe(document.body, { childList: true, subtree: true });
 
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['style']
-        });
-
-        // Also observe the shadow DOM when it becomes available
-        function observeShadow() {
-            const cmp = document.querySelector('cast-media-player');
-            if (cmp && cmp.shadowRoot) {
-                observer.observe(cmp.shadowRoot, {
-                    childList: true,
-                    subtree: true,
-                    attributes: true,
-                    attributeFilter: ['style']
-                });
-
-                // Observe nested shadow roots
-                cmp.shadowRoot.querySelectorAll('*').forEach(el => {
-                    if (el.shadowRoot) {
-                        observer.observe(el.shadowRoot, {
-                            childList: true,
-                            subtree: true,
-                            attributes: true,
-                            attributeFilter: ['style']
-                        });
-                    }
-                });
-            }
-        }
-
-        // Apply on media load and periodically
+        // Fix after media loads
         playerManager.addEventListener(
             cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
             () => {
-                findAndFixVideos();
-                observeShadow();
+                fixAllVideos();
+                setTimeout(fixAllVideos, 1000);
+                setTimeout(fixAllVideos, 3000);
+
+                // Observe shadow DOM for new child elements only
+                const cmp = document.querySelector('cast-media-player');
+                if (cmp && cmp.shadowRoot) {
+                    observer.observe(cmp.shadowRoot, { childList: true, subtree: true });
+                }
             }
         );
 
-        // Periodic enforcement as a safety net (every 2 seconds)
-        setInterval(() => {
-            findAndFixVideos();
-            observeShadow();
-        }, 2000);
-
-        // Initial run
-        findAndFixVideos();
-        observeShadow();
+        // Gentle periodic check every 5 seconds
+        setInterval(fixAllVideos, 5000);
 
         context.start();
     </script>
