@@ -5,16 +5,10 @@
     <meta charset="utf-8">
     <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
     <style>
-        * {
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
             background: black;
-            width: 100vw;
-            height: 100vh;
             overflow: hidden;
         }
 
@@ -23,7 +17,6 @@
             height: 100vh;
             --theme-hue: 0;
             --progress-color: white;
-            --splash-image: none;
         }
     </style>
 </head>
@@ -33,27 +26,6 @@
 
     <script>
         const context = cast.framework.CastReceiverContext.getInstance();
-        const playerManager = context.getPlayerManager();
-
-        // Fix portrait video: apply object-fit:contain after video loads
-        playerManager.addEventListener(
-            cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
-            () => {
-                setTimeout(() => {
-                    const cmp = document.querySelector('cast-media-player');
-                    if (cmp && cmp.shadowRoot) {
-                        const video = cmp.shadowRoot.querySelector('video');
-                        if (video) {
-                            video.style.setProperty('object-fit', 'contain', 'important');
-                        }
-                    }
-                    document.querySelectorAll('video').forEach(v => {
-                        v.style.setProperty('object-fit', 'contain', 'important');
-                    });
-                }, 2000);
-            }
-        );
-
         context.start();
     </script>
 </body>
