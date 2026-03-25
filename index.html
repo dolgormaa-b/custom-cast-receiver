@@ -52,11 +52,10 @@
             video.setAttribute('listener-added', 'true');
 
             video.onended = function () {
-                playerManager.broadcastStatus(true);
 
-                context.sendCustomMessage('urn:x-cast:com.memo.drama.control', {
-                    command: 'video_finished'
-                });
+                playerManager.stop();
+
+                playerManager.broadcastStatus(true);
             };
 
         }
