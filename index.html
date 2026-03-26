@@ -149,7 +149,7 @@
                     const style = document.createElement('style');
                     style.id = 'portrait-fix';
                     style.textContent = 'video { width: ' + displayW + 'px !important; height: ' + displayH + 'px !important; position: absolute !important; top: 0 !important; left: ' + leftOffset + 'px !important; object-fit: fill !important; }';
-                    // cmp.shadowRoot.appendChild(style);
+                    cmp.shadowRoot.appendChild(style);
                 }
             } else {
                 isPortrait = false;
@@ -178,25 +178,7 @@
         );
 
 
-        const options = new cast.framework.CastReceiverOptions();
-
-        options.queue = {
-            enabled: true
-        };
-
-        options.playbackConfig = new cast.framework.PlaybackConfig();
-
-        context.start(options);
-
-
-
-        // playerManager.setSupportedMediaCommands(
-        //     cast.framework.messages.Command.ALL_BASIC_MEDIA |
-        //     cast.framework.messages.Command.QUEUE_NEXT |
-        //     cast.framework.messages.Command.QUEUE_PREV
-        // );
-
-        // context.start();
+        context.start();
     </script>
 </body>
 
