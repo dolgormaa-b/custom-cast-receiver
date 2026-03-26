@@ -110,18 +110,18 @@
         );
 
         // 5. MEDIA_CHANGED - Дарааллаар тоглох үед дуудагдана
-        playerManager.addEventListener(
-            cast.framework.events.EventType.MEDIA_CHANGED,
-            () => {
-                console.log('[EVENT] MEDIA_CHANGED');
-                // Portrait fix-ийг шинэ видео бүрт цэвэрлэх
-                const cmp = document.querySelector('cast-media-player');
-                if (cmp?.shadowRoot) {
-                    const oldFix = cmp.shadowRoot.querySelector('#portrait-fix');
-                    if (oldFix) oldFix.remove();
-                }
-            }
-        );
+        // playerManager.addEventListener(
+        //     cast.framework.events.EventType.MEDIA_CHANGED,
+        //     () => {
+        //         console.log('[EVENT] MEDIA_CHANGED');
+        //         // Portrait fix-ийг шинэ видео бүрт цэвэрлэх
+        //         const cmp = document.querySelector('cast-media-player');
+        //         if (cmp?.shadowRoot) {
+        //             const oldFix = cmp.shadowRoot.querySelector('#portrait-fix');
+        //             if (oldFix) oldFix.remove();
+        //         }
+        //     }
+        // );
 
         // 6. Portrait Video Fix
         function fixPortraitVideo() {
