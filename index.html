@@ -15,7 +15,6 @@
         cast-media-player {
             width: 100vw;
             height: 100vh;
-            --theme-hue: 0;
             --progress-color: white;
             --splash-image: none;
         }
@@ -24,7 +23,6 @@
             background: rgba(0, 0, 0, 0.6) !important;
             color: white !important;
             font-size: 20px !important;
-            line-height: normal !important;
         }
     </style>
 </head>
@@ -36,27 +34,30 @@
         const context = cast.framework.CastReceiverContext.getInstance();
         const playerManager = context.getPlayerManager();
 
+        // 1. Видео элементыг Shadow DOM-оос хайх
         function findVideo() {
             const cmp = document.querySelector('cast-media-player');
             if (cmp && cmp.shadowRoot) {
-                const v = cmp.shadowRoot.querySelector('video');
-                if (v) return v;
+                return cmp.shadowRoot.querySelector('video') || document.querySelector('video');
             }
             return document.querySelector('video');
         }
 
+        // 2. Хадмалыг цэвэрлэх
         function clearSubtitles() {
             const video = findVideo();
             if (!video) return;
             const oldTracks = video.querySelectorAll('track');
             oldTracks.forEach(t => t.remove());
-            for (let i = 0; i < video.textTracks.length; i++) {
-                video.textTracks[i].mode = 'disabled';
+            if (video.textTracks) {
+                for (let i = 0; i < video.textTracks.length; i++) {
+                    video.textTracks[i].mode = 'disabled';
+                }
             }
             console.log('[SUBS] Cleared');
         }
 
-        // ✅ Inject subtitle
+        // 3. Хадмал шахах (Unique function)
         function injectSubtitle(vttUrl, langName) {
             const video = findVideo();
             if (!video || !vttUrl) return;
@@ -67,140 +68,62 @@
             track.kind = 'subtitles';
             track.label = langName || 'Mongolian';
             track.srclang = 'mn';
-            track.src = vttUrl + '?t=' + Date.now(); // ✅ cache bust
+            track.src = vttUrl + '?t=' + Date.now(); // Cache bust
             track.default = true;
             video.appendChild(track);
 
-            track.addEventListener('load', () => {
-                for (let i = 0; i < video.textTracks.length; i++) {
-                    video.textTracks[i].mode = i === 0 ? 'showing' : 'disabled';
+            // Идэвхжүүлэх
+            setTimeout(() => {
+                if (video.textTracks && video.textTracks.length > 0) {
+                    video.textTracks[0].mode = 'showing';
                 }
                 console.log('[SUBS] Activated:', vttUrl);
-            });
-
-            // ✅ Fallback
-            setTimeout(() => {
-                for (let i = 0; i < video.textTracks.length; i++) {
-                    video.textTracks[i].mode = i === 0 ? 'showing' : 'disabled';
-                }
             }, 500);
-
-            console.log('[SUBS] Injected:', vttUrl);
         }
 
-        // ✅ Get subtitle from media info
-        function injectSubFromMedia(media) {
-            if (!media) return;
-            if (media.tracks && media.tracks.length > 0) {
-                const subTrack = media.tracks[0];
-                if (subTrack.trackContentId) {
-                    setTimeout(() => injectSubtitle(subTrack.trackContentId, subTrack.name), 1000);
-                    setTimeout(() => injectSubtitle(subTrack.trackContentId, subTrack.name), 2000);
-                }
-            } else {
-                clearSubtitles(); // ✅ no subtitle for this episode
-            }
-        }
-
-
-
-        // ✅ MEDIA_CHANGED — subsequent queue items
-        playerManager.addEventListener(
-            cast.framework.events.EventType.MEDIA_CHANGED,
-            () => {
-                console.log('[EVENT] MEDIA_CHANGED');
-                clearSubtitles();
-
-                // ✅ Remove old portrait fix for new video
-                const cmp = document.querySelector('cast-media-player');
-                if (cmp && cmp.shadowRoot) {
-                    const oldFix = cmp.shadowRoot.querySelector('#portrait-fix');
-                    if (oldFix) oldFix.remove();
-                }
-
-                const media = playerManager.getMediaInformation();
-                injectSubFromMedia(media);
-            }
-        );
-
-        // ✅ Re-sync after seek
-        playerManager.addEventListener(
-            cast.framework.events.EventType.SEEKED,
-            () => {
-                const video = findVideo();
-                if (!video) return;
-                setTimeout(() => {
-                    for (let i = 0; i < video.textTracks.length; i++) {
-                        video.textTracks[i].mode = i === 0 ? 'showing' : 'disabled';
-                    }
-                    console.log('[SUBS] Re-synced after seek');
-                }, 300);
-            }
-        );
-
-        function setupVideoListeners() {
-            const video = findVideo();
-            if (!video || video.hasAttribute('listener-added')) return;
-
-            video.setAttribute('listener-added', 'true');
-
-            video.onended = function () {
-                // playerManager.stop();
-                playerManager.broadcastStatus(true);
-            };
-
-        }
-
-        // function injectSubtitle(vttUrl, langName) {
-        //     const video = findVideo();
-        //     if (!video) return;
-
-        //     const oldTracks = video.querySelectorAll('track');
-        //     oldTracks.forEach(t => t.remove());
-
-        //     const track = document.createElement('track');
-        //     track.kind = 'subtitles';
-        //     track.label = langName || 'Mongolian';
-        //     track.srclang = 'mn';
-        //     track.src = vttUrl;
-        //     track.default = true;
-
-        //     video.appendChild(track);
-
-        //     if (video.textTracks && video.textTracks.length > 0) {
-        //         video.textTracks[0].mode = 'showing';
-        //     }
-        //     console.log('[SUBS] Injected VTT:', vttUrl);
-        // }
-
+        // 4. LOAD Interceptor - Хамгийн чухал хэсэг
         playerManager.setMessageInterceptor(
             cast.framework.messages.MessageType.LOAD,
             request => {
-                clearSubtitles();
-                const tracks = request?.media?.tracks;
+                console.log('📥 Load Request Received');
 
+                // Дараагийн видео руу ороход хуучин хадмалыг цэвэрлэх
+                clearSubtitles();
+
+                const tracks = request?.media?.tracks;
                 if (tracks && Array.isArray(tracks) && tracks.length > 0) {
                     try {
                         const subTrack = tracks[0];
                         const vttUrl = subTrack.trackContentId;
-                        const langName = subTrack.name;
+                        const langName = subTrack.name || 'Mongolian';
 
                         if (vttUrl) {
-                            setTimeout(() => injectSubtitle(vttUrl, langName), 1500);
+                            // Видео ачаалж дууссаны дараа хадмалыг шахах delay
+                            setTimeout(() => injectSubtitle(vttUrl, langName), 2000);
                         }
                     } catch (e) {
                         console.error("[SUBS] Interceptor error:", e);
                     }
                 }
-
-                return request;
+                return request; // ЗААВАЛ буцаах
             }
         );
 
+        // 5. MEDIA_CHANGED - Дарааллаар тоглох үед дуудагдана
+        playerManager.addEventListener(
+            cast.framework.events.EventType.MEDIA_CHANGED,
+            () => {
+                console.log('[EVENT] MEDIA_CHANGED');
+                // Portrait fix-ийг шинэ видео бүрт цэвэрлэх
+                const cmp = document.querySelector('cast-media-player');
+                if (cmp?.shadowRoot) {
+                    const oldFix = cmp.shadowRoot.querySelector('#portrait-fix');
+                    if (oldFix) oldFix.remove();
+                }
+            }
+        );
 
-        let isPortrait = false;
-        let fixInterval = null;
-
+        // 6. Portrait Video Fix
         function fixPortraitVideo() {
             const video = findVideo();
             if (!video) return;
@@ -210,46 +133,32 @@
             if (!vw || !vh) return;
 
             if (vh > vw) {
-                isPortrait = true;
                 const screenW = window.innerWidth || 1920;
                 const screenH = window.innerHeight || 1080;
                 const ratio = vw / vh;
-                const displayH = screenH;
                 const displayW = Math.round(screenH * ratio);
                 const leftOffset = Math.round((screenW - displayW) / 2);
 
-                video.style.setProperty('width', displayW + 'px', 'important');
-                video.style.setProperty('height', displayH + 'px', 'important');
-                video.style.setProperty('position', 'absolute', 'important');
-                video.style.setProperty('top', '0px', 'important');
-                video.style.setProperty('left', leftOffset + 'px', 'important');
-                video.style.setProperty('object-fit', 'fill', 'important');
-
                 const cmp = document.querySelector('cast-media-player');
-                if (cmp && cmp.shadowRoot && !cmp.shadowRoot.querySelector('#portrait-fix')) {
+                if (cmp?.shadowRoot && !cmp.shadowRoot.querySelector('#portrait-fix')) {
                     const style = document.createElement('style');
                     style.id = 'portrait-fix';
-                    style.textContent = 'video { width: ' + displayW + 'px !important; height: ' + displayH + 'px !important; position: absolute !important; top: 0 !important; left: ' + leftOffset + 'px !important; object-fit: fill !important; }';
+                    style.textContent = `video { width: ${displayW}px !important; height: ${screenH}px !important; position: absolute !important; top: 0 !important; left: ${leftOffset}px !important; object-fit: fill !important; }`;
                     cmp.shadowRoot.appendChild(style);
                 }
-            } else {
-                isPortrait = false;
             }
         }
 
-        fixInterval = setInterval(fixPortraitVideo, 200);
+        setInterval(fixPortraitVideo, 500);
 
-        playerManager.addEventListener(
-            cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
-            () => {
-                console.log('[EVENT] PLAYER_LOAD_COMPLETE');
-                setupVideoListeners();
-                fixPortraitVideo();
-            }
-        );
+        // 7. Receiver эхлүүлэх
+        const options = new cast.framework.CastReceiverOptions();
+        // Автоматаар дараагийн видео руу шилжих тохиргоо
+        options.autoNextConfig = new cast.framework.ui.AutoNextConfig();
+        options.autoNextConfig.timeout = 3;
 
-        context.start();
-        console.log('[RECEIVER] Started');
+        context.start(options);
+        console.log('[RECEIVER] Started with Options');
     </script>
 </body>
 
