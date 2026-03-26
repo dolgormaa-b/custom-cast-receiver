@@ -52,9 +52,7 @@
             video.setAttribute('listener-added', 'true');
 
             video.onended = function () {
-
-                playerManager.stop();
-
+                // playerManager.stop();
                 playerManager.broadcastStatus(true);
             };
 
@@ -164,6 +162,9 @@
             cast.framework.messages.Command.ALL_BASIC_MEDIA |
             cast.framework.messages.Command.QUEUE_NEXT |
             cast.framework.messages.Command.QUEUE_PREV;
+
+        options.autoNextConfig = new cast.framework.ui.AutoNextConfig();
+        options.autoNextConfig.timeout = 2;
 
         context.start();
         console.log('[RECEIVER] Started');
