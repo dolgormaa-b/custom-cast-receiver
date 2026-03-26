@@ -83,16 +83,26 @@
         playerManager.setMessageInterceptor(
             cast.framework.messages.MessageType.LOAD,
             request => {
-                if (request.media && request.media.tracks && request.media.tracks.length > 0) {
-                    const subTrack = request.media.tracks[0];
-                    const vttUrl = subTrack.trackContentId;
-                    const langName = subTrack.name;
+                const tracks = request?.media?.tracks;
 
-                    setTimeout(() => injectSubtitle(vttUrl, langName), 1500);
+                if (tracks && Array.isArray(tracks) && tracks.length > 0) {
+                    try {
+                        const subTrack = tracks[0];
+                        const vttUrl = subTrack.trackContentId;
+                        const langName = subTrack.name;
+
+                        if (vttUrl) {
+                            setTimeout(() => injectSubtitle(vttUrl, langName), 1500);
+                        }
+                    } catch (e) {
+                        console.error("[SUBS] Interceptor error:", e);
+                    }
                 }
+
                 return request;
             }
         );
+
 
         let isPortrait = false;
         let fixInterval = null;
