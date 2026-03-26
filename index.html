@@ -51,20 +51,24 @@
 
             video.setAttribute('listener-added', 'true');
 
-            // video.onended = function () {
-
-            //     playerManager.stop();
-
-            //     playerManager.broadcastStatus(true);
-            // };
-
             video.onended = function () {
 
-                const queue = playerManager.getQueueManager();
-                if (queue && !queue.getNextItemId()) {
-                    playerManager.broadcastStatus(true);
-                }
+                playerManager.stop();
+
+                playerManager.broadcastStatus(true);
             };
+
+            // video.onended = function () {
+
+            //     const queue = playerManager.getQueueManager();
+            //     if (queue && !queue.getNextItemId()) {
+            //         playerManager.broadcastStatus(true);
+            //     }
+            //     else {
+            //         playerManager.stop();
+            //         playerManager.broadcastStatus(true);
+            //     }
+            // };
 
         }
 
@@ -153,6 +157,13 @@
                 fixPortraitVideo();
             }
         );
+
+        const options = new cast.framework.CastReceiverOptions();
+
+        options.supportedCommands =
+            cast.framework.messages.Command.ALL_BASIC_MEDIA |
+            cast.framework.messages.Command.QUEUE_NEXT |
+            cast.framework.messages.Command.QUEUE_PREV;
 
         context.start();
         console.log('[RECEIVER] Started');
