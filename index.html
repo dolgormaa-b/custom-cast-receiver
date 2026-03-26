@@ -57,6 +57,21 @@
             console.log('[SUBS] Cleared');
         }
 
+
+        function setupVideoListeners() {
+            const video = findVideo();
+            if (!video || video.hasAttribute('listener-added')) return;
+
+            video.setAttribute('listener-added', 'true');
+
+            video.onended = function () {
+
+                playerManager.stop();
+
+                playerManager.broadcastStatus(true);
+            };
+
+        }
         // 3. Хадмал шахах (Unique function)
         function injectSubtitle(vttUrl, langName) {
             const video = findVideo();
@@ -130,7 +145,9 @@
         //     }
         // );
 
-        // 6. Portrait Video Fix
+        let isPortrait = false;
+        let fixInterval = null;
+
         function fixPortraitVideo() {
             const video = findVideo();
             if (!video) return;
@@ -140,27 +157,52 @@
             if (!vw || !vh) return;
 
             if (vh > vw) {
+                isPortrait = true;
                 const screenW = window.innerWidth || 1920;
                 const screenH = window.innerHeight || 1080;
                 const ratio = vw / vh;
+                const displayH = screenH;
                 const displayW = Math.round(screenH * ratio);
                 const leftOffset = Math.round((screenW - displayW) / 2);
 
+                video.style.setProperty('width', displayW + 'px', 'important');
+                video.style.setProperty('height', displayH + 'px', 'important');
+                video.style.setProperty('position', 'absolute', 'important');
+                video.style.setProperty('top', '0px', 'important');
+                video.style.setProperty('left', leftOffset + 'px', 'important');
+                video.style.setProperty('object-fit', 'fill', 'important');
+
                 const cmp = document.querySelector('cast-media-player');
-                if (cmp?.shadowRoot && !cmp.shadowRoot.querySelector('#portrait-fix')) {
+                if (cmp && cmp.shadowRoot && !cmp.shadowRoot.querySelector('#portrait-fix')) {
                     const style = document.createElement('style');
                     style.id = 'portrait-fix';
-                    style.textContent = `video { width: ${displayW}px !important; height: ${screenH}px !important; position: absolute !important; top: 0 !important; left: ${leftOffset}px !important; object-fit: fill !important; }`;
+                    style.textContent = 'video { width: ' + displayW + 'px !important; height: ' + displayH + 'px !important; position: absolute !important; top: 0 !important; left: ' + leftOffset + 'px !important; object-fit: fill !important; }';
                     cmp.shadowRoot.appendChild(style);
                 }
+            } else {
+                isPortrait = false;
             }
         }
 
-        setInterval(fixPortraitVideo, 500);
+        fixInterval = setInterval(fixPortraitVideo, 200);
 
+        playerManager.addEventListener(
+            cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
+            () => {
+                console.log('[EVENT] PLAYER_LOAD_COMPLETE');
 
-        context.start();
-        console.log('[RECEIVER] Started with Options');
+                const media = playerManager.getMediaInformation();
+                if (media && media.tracks && media.tracks.length > 0) {
+                    const subTrack = media.tracks[0];
+                    if (subTrack && subTrack.trackContentId) {
+                        injectSubtitle(subTrack.trackContentId, subTrack.name);
+                    }
+                }
+
+                setupVideoListeners();
+                fixPortraitVideo();
+            }
+        )
     </script>
 </body>
 
