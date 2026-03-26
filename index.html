@@ -82,32 +82,32 @@
         }
 
         // 4. LOAD Interceptor - Хамгийн чухал хэсэг
-        playerManager.setMessageInterceptor(
-            cast.framework.messages.MessageType.LOAD,
-            request => {
-                console.log('📥 Load Request Received');
+        // playerManager.setMessageInterceptor(
+        //     cast.framework.messages.MessageType.LOAD,
+        //     request => {
+        //         console.log('📥 Load Request Received');
 
-                // Дараагийн видео руу ороход хуучин хадмалыг цэвэрлэх
-                clearSubtitles();
+        //         // Дараагийн видео руу ороход хуучин хадмалыг цэвэрлэх
+        //         clearSubtitles();
 
-                const tracks = request?.media?.tracks;
-                if (tracks && tracks.length > 0) {
-                    try {
-                        const subTrack = tracks[0];
-                        const vttUrl = subTrack.trackContentId;
-                        const langName = subTrack.name || 'Mongolian';
+        //         const tracks = request?.media?.tracks;
+        //         if (tracks && tracks.length > 0) {
+        //             try {
+        //                 const subTrack = tracks[0];
+        //                 const vttUrl = subTrack.trackContentId;
+        //                 const langName = subTrack.name || 'Mongolian';
 
-                        if (vttUrl) {
-                            // Видео ачаалж дууссаны дараа хадмалыг шахах delay
-                            setTimeout(() => injectSubtitle(vttUrl, langName), 2000);
-                        }
-                    } catch (e) {
-                        console.error("[SUBS] Interceptor error:", e);
-                    }
-                }
-                return request; // ЗААВАЛ буцаах
-            }
-        );
+        //                 if (vttUrl) {
+        //                     // Видео ачаалж дууссаны дараа хадмалыг шахах delay
+        //                     setTimeout(() => injectSubtitle(vttUrl, langName), 2000);
+        //                 }
+        //             } catch (e) {
+        //                 console.error("[SUBS] Interceptor error:", e);
+        //             }
+        //         }
+        //         return request; // ЗААВАЛ буцаах
+        //     }
+        // );
 
         // 5. MEDIA_CHANGED - Дарааллаар тоглох үед дуудагдана
         // playerManager.addEventListener(
