@@ -72,6 +72,20 @@
             };
 
         }
+
+        function enableSubtitles() {
+            const tracks = playerManager.getTracks();
+
+            if (!tracks || tracks.length === 0) return;
+
+            const subtitleTrack = tracks.find(t => t.type === 'TEXT');
+
+            if (subtitleTrack) {
+                playerManager.setActiveTrackIds([subtitleTrack.trackId]);
+                console.log('[SUBS] Enabled via CAF');
+            }
+        }
+
         let subTimer = null;
         function injectSubtitle(vttUrl, langName) {
             const video = findVideo();
@@ -193,16 +207,17 @@
             () => {
                 console.log('[EVENT] PLAYER_LOAD_COMPLETE');
 
-                const media = playerManager.getMediaInformation();
-                if (media && media.tracks && media.tracks.length > 0) {
-                    const subTrack = media.tracks[0];
-                    if (subTrack && subTrack.trackContentId) {
-                        injectSubtitle(subTrack.trackContentId, subTrack.name);
-                    }
-                }
+                // const media = playerManager.getMediaInformation();
+                // if (media && media.tracks && media.tracks.length > 0) {
+                //     const subTrack = media.tracks[0];
+                //     if (subTrack && subTrack.trackContentId) {
+                //         injectSubtitle(subTrack.trackContentId, subTrack.name);
+                //     }
+                // }
 
                 setupVideoListeners();
                 fixPortraitVideo();
+                enableSubtitles();
             }
         );
 
