@@ -34,7 +34,6 @@
         const context = cast.framework.CastReceiverContext.getInstance();
         const playerManager = context.getPlayerManager();
 
-        // 1. Видео элементыг Shadow DOM-оос хайх
         function findVideo() {
             const cmp = document.querySelector('cast-media-player');
             if (cmp && cmp.shadowRoot) {
@@ -43,7 +42,6 @@
             return document.querySelector('video');
         }
 
-        // 2. Хадмалыг цэвэрлэх
         function clearSubtitles() {
             const video = findVideo();
             if (!video) return;
@@ -66,9 +64,8 @@
 
             video.onended = function () {
 
-                // playerManager.stop();
-
-                // playerManager.broadcastStatus(true);
+                playerManager.stop();
+                playerManager.broadcastStatus(true);
             };
 
         }
@@ -119,47 +116,6 @@
             }
         );
 
-        // 4. LOAD Interceptor - Хамгийн чухал хэсэг
-        // playerManager.setMessageInterceptor(
-        //     cast.framework.messages.MessageType.LOAD,
-        //     request => {
-        //         console.log('📥 Load Request Received');
-
-        //         // Дараагийн видео руу ороход хуучин хадмалыг цэвэрлэх
-        //         clearSubtitles();
-
-        //         const tracks = request?.media?.tracks;
-        //         if (tracks && Array.isArray(tracks) && tracks.length > 0) {
-        //             try {
-        //                 const subTrack = tracks[0];
-        //                 const vttUrl = subTrack.trackContentId;
-        //                 const langName = subTrack.name || 'Mongolian';
-
-        //                 if (vttUrl) {
-        //                     // Видео ачаалж дууссаны дараа хадмалыг шахах delay
-        //                     setTimeout(() => injectSubtitle(vttUrl, langName), 2000);
-        //                 }
-        //             } catch (e) {
-        //                 console.error("[SUBS] Interceptor error:", e);
-        //             }
-        //         }
-        //         return request; // ЗААВАЛ буцаах
-        //     }
-        // );
-
-        // 5. MEDIA_CHANGED - Дарааллаар тоглох үед дуудагдана
-        // playerManager.addEventListener(
-        //     cast.framework.events.EventType.MEDIA_CHANGED,
-        //     () => {
-        //         console.log('[EVENT] MEDIA_CHANGED');
-        //         // Portrait fix-ийг шинэ видео бүрт цэвэрлэх
-        //         const cmp = document.querySelector('cast-media-player');
-        //         if (cmp?.shadowRoot) {
-        //             const oldFix = cmp.shadowRoot.querySelector('#portrait-fix');
-        //             if (oldFix) oldFix.remove();
-        //         }
-        //     }
-        // );
 
         let isPortrait = false;
         let fixInterval = null;
