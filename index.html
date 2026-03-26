@@ -45,6 +45,99 @@
             return document.querySelector('video');
         }
 
+        function clearSubtitles() {
+            const video = findVideo();
+            if (!video) return;
+            const oldTracks = video.querySelectorAll('track');
+            oldTracks.forEach(t => t.remove());
+            for (let i = 0; i < video.textTracks.length; i++) {
+                video.textTracks[i].mode = 'disabled';
+            }
+            console.log('[SUBS] Cleared');
+        }
+
+        // ✅ Inject subtitle
+        function injectSubtitle(vttUrl, langName) {
+            const video = findVideo();
+            if (!video || !vttUrl) return;
+
+            clearSubtitles();
+
+            const track = document.createElement('track');
+            track.kind = 'subtitles';
+            track.label = langName || 'Mongolian';
+            track.srclang = 'mn';
+            track.src = vttUrl + '?t=' + Date.now(); // ✅ cache bust
+            track.default = true;
+            video.appendChild(track);
+
+            track.addEventListener('load', () => {
+                for (let i = 0; i < video.textTracks.length; i++) {
+                    video.textTracks[i].mode = i === 0 ? 'showing' : 'disabled';
+                }
+                console.log('[SUBS] Activated:', vttUrl);
+            });
+
+            // ✅ Fallback
+            setTimeout(() => {
+                for (let i = 0; i < video.textTracks.length; i++) {
+                    video.textTracks[i].mode = i === 0 ? 'showing' : 'disabled';
+                }
+            }, 500);
+
+            console.log('[SUBS] Injected:', vttUrl);
+        }
+
+        // ✅ Get subtitle from media info
+        function injectSubFromMedia(media) {
+            if (!media) return;
+            if (media.tracks && media.tracks.length > 0) {
+                const subTrack = media.tracks[0];
+                if (subTrack.trackContentId) {
+                    setTimeout(() => injectSubtitle(subTrack.trackContentId, subTrack.name), 1000);
+                    setTimeout(() => injectSubtitle(subTrack.trackContentId, subTrack.name), 2000);
+                }
+            } else {
+                clearSubtitles(); // ✅ no subtitle for this episode
+            }
+        }
+
+
+
+        // ✅ MEDIA_CHANGED — subsequent queue items
+        playerManager.addEventListener(
+            cast.framework.events.EventType.MEDIA_CHANGED,
+            () => {
+                console.log('[EVENT] MEDIA_CHANGED');
+                clearSubtitles();
+
+                // ✅ Remove old portrait fix for new video
+                const cmp = document.querySelector('cast-media-player');
+                if (cmp && cmp.shadowRoot) {
+                    const oldFix = cmp.shadowRoot.querySelector('#portrait-fix');
+                    if (oldFix) oldFix.remove();
+                }
+
+                const media = playerManager.getMediaInformation();
+                injectSubFromMedia(media);
+            }
+        );
+
+        // ✅ Re-sync after seek
+        playerManager.addEventListener(
+            cast.framework.events.EventType.SEEKED,
+            () => {
+                const video = findVideo();
+                if (!video) return;
+                setTimeout(() => {
+                    for (let i = 0; i < video.textTracks.length; i++) {
+                        video.textTracks[i].mode = i === 0 ? 'showing' : 'disabled';
+                    }
+                    console.log('[SUBS] Re-synced after seek');
+                }, 300);
+            }
+        );
+
         function setupVideoListeners() {
             const video = findVideo();
             if (!video || video.hasAttribute('listener-added')) return;
@@ -83,6 +176,7 @@
         playerManager.setMessageInterceptor(
             cast.framework.messages.MessageType.LOAD,
             request => {
+                clearSubtitles();
                 const tracks = request?.media?.tracks;
 
                 if (tracks && Array.isArray(tracks) && tracks.length > 0) {
