@@ -51,11 +51,19 @@
 
             video.setAttribute('listener-added', 'true');
 
+            // video.onended = function () {
+
+            //     playerManager.stop();
+
+            //     playerManager.broadcastStatus(true);
+            // };
+
             video.onended = function () {
 
-                playerManager.stop();
-
-                playerManager.broadcastStatus(true);
+                const queue = playerManager.getQueueManager();
+                if (queue && !queue.getNextItemId()) {
+                    playerManager.broadcastStatus(true);
+                }
             };
 
         }
@@ -141,7 +149,7 @@
             cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
             () => {
                 console.log('[EVENT] PLAYER_LOAD_COMPLETE');
-                // setupVideoListeners();
+                setupVideoListeners();
                 fixPortraitVideo();
             }
         );
