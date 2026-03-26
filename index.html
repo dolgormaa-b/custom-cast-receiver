@@ -77,18 +77,18 @@
             const video = findVideo();
             if (!video || !vttUrl) return;
 
-            // clearSubtitles();
+            clearSubtitles();
 
-            // const track = document.createElement('track');
-            // if (track) {
-            //     track.kind = 'subtitles';
-            //     track.label = langName || 'Mongolian';
-            //     track.srclang = 'mn';
-            //     track.src = vttUrl;
-            //     track.default = true;
-            //     video.appendChild(track);
+            const track = document.createElement('track');
+            if (track) {
+                track.kind = 'subtitles';
+                track.label = langName || 'Mongolian';
+                track.srclang = 'mn';
+                track.src = vttUrl;
+                track.default = true;
+                video.appendChild(track);
 
-            // }
+            }
             // subTimer = setTimeout(() => {
             //     if (video.textTracks && video.textTracks.length > 0) {
             //         video.textTracks[0].mode = 'showing';
@@ -192,14 +192,23 @@
             () => {
                 console.log('[EVENT] PLAYER_LOAD_COMPLETE');
 
-                const media = playerManager.getMediaInformation();
-                if (media && media.tracks && media.tracks.length > 0) {
-                    const subTrack = media.tracks[0];
-                    if (subTrack && subTrack.trackContentId) {
-                        injectSubtitle(subTrack.trackContentId, subTrack.name);
-                    }
-                }
+                // const media = playerManager.getMediaInformation();
+                // if (media && media.tracks && media.tracks.length > 0) {
+                //     const subTrack = media.tracks[0];
+                //     if (subTrack && subTrack.trackContentId) {
+                //         injectSubtitle(subTrack.trackContentId, subTrack.name);
+                //     }
+                // }
 
+                setTimeout(() => {
+                    const media = playerManager.getMediaInformation();
+                    if (media && media.tracks && media.tracks.length > 0) {
+                        const subTrack = media.tracks[0];
+                        if (subTrack && subTrack.trackContentId) {
+                            injectSubtitle(subTrack.trackContentId, subTrack.name);
+                        }
+                    }
+                }, 2000);
                 setupVideoListeners();
                 fixPortraitVideo();
             }
