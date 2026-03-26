@@ -177,7 +177,18 @@
             }
         );
 
-        context.start();
+
+        const options = new cast.framework.CastReceiverOptions();
+
+        options.queue = {
+            enabled: true
+        };
+
+        options.playbackConfig = new cast.framework.PlaybackConfig();
+
+        context.start(options);
+
+        // context.start();
     </script>
 </body>
 
