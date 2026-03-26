@@ -151,13 +151,8 @@
 
         setInterval(fixPortraitVideo, 500);
 
-        // 7. Receiver эхлүүлэх
-        const options = new cast.framework.CastReceiverOptions();
-        // Автоматаар дараагийн видео руу шилжих тохиргоо
-        options.autoNextConfig = new cast.framework.ui.AutoNextConfig();
-        options.autoNextConfig.timeout = 3;
 
-        context.start(options);
+        context.start();
         console.log('[RECEIVER] Started with Options');
     </script>
 </body>
