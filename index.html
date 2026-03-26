@@ -35,6 +35,14 @@
     <script>
         const context = cast.framework.CastReceiverContext.getInstance();
         const playerManager = context.getPlayerManager();
+        const options = new cast.framework.CastReceiverOptions();
+
+        options.autoNextConfig = new cast.framework.ui.AutoNextConfig();
+        options.autoNextConfig.timeout = 3;
+
+        options.supportedCommands = cast.framework.messages.Command.ALL_BASIC_MEDIA |
+            cast.framework.messages.Command.QUEUE_NEXT |
+            cast.framework.messages.Command.QUEUE_PREV;
 
         function findVideo() {
             const cmp = document.querySelector('cast-media-player');
@@ -144,7 +152,13 @@
             }
         );
 
-        context.start();
+        try {
+            context.start(options);
+            console.log('[RECEIVER] Started with Options');
+        } catch (e) {
+            console.error('[ERROR] Receiver start failed:', e);
+            context.start();
+        }
         console.log('[RECEIVER] Started');
     </script>
 </body>
