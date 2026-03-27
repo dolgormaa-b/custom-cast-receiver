@@ -196,15 +196,15 @@
         }
 
 
-        playerManager.addEventListener(cast.framework.events.EventType.SEEKED, () => {
-            const activeIds = playerManager.getActiveTrackIds();
-            if (activeIds && activeIds.length > 0) {
-                playerManager.setActiveTrackIds([]);
-                setTimeout(() => {
-                    playerManager.setActiveTrackIds(activeIds);
-                }, 10);
-            }
-        });
+        // playerManager.addEventListener(cast.framework.events.EventType.SEEKED, () => {
+        //     const activeIds = playerManager.getActiveTrackIds();
+        //     if (activeIds && activeIds.length > 0) {
+        //         playerManager.setActiveTrackIds([]);
+        //         setTimeout(() => {
+        //             playerManager.setActiveTrackIds(activeIds);
+        //         }, 10);
+        //     }
+        // });
 
         playerManager.setSupportedMediaCommands(
             cast.framework.messages.Command.ALL_BASIC_MEDIA |
