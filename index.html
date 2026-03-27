@@ -230,14 +230,14 @@
         }
 
 
-        playerManager.addEventListener(
-            cast.framework.events.EventType.MEDIA_CHANGED,
-            () => {
-                console.log('[EVENT] MEDIA_CHANGED');
+        // playerManager.addEventListener(
+        //     cast.framework.events.EventType.MEDIA_CHANGED,
+        //     () => {
+        //         console.log('[EVENT] MEDIA_CHANGED');
 
-                resetSubtitles();
-            }
-        );
+        //         resetSubtitles();
+        //     }
+        // );
 
         playerManager.setSupportedMediaCommands(
             cast.framework.messages.Command.ALL_BASIC_MEDIA |
