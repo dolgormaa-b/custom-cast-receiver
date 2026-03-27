@@ -157,19 +157,19 @@
             cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
             () => {
 
-                const video = findVideo();
-                if (video) {
-                    const oldTracks = video.querySelectorAll('track');
-                    if (oldTracks) {
-                        oldTracks.forEach(t => t.remove());
+                // const video = findVideo();
+                // if (video) {
+                //     const oldTracks = video.querySelectorAll('track');
+                //     if (oldTracks) {
+                //         oldTracks.forEach(t => t.remove());
 
-                        if (video.textTracks) {
-                            for (let i = 0; i < video.textTracks.length; i++) {
-                                video.textTracks[i].mode = 'disabled';
-                            }
-                        }
-                    }
-                }
+                //         if (video.textTracks) {
+                //             for (let i = 0; i < video.textTracks.length; i++) {
+                //                 video.textTracks[i].mode = 'disabled';
+                //             }
+                //         }
+                //     }
+                // }
 
                 const cmp = document.querySelector('cast-media-player');
                 if (cmp && cmp.shadowRoot) {
