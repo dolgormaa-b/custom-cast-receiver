@@ -184,6 +184,34 @@
             }
         );
 
+        playerManager.addEventListener(
+            cast.framework.events.EventType.TIME_UPDATE,
+            (event) => {
+                const video = findVideo();
+                if (!video || !video.textTracks || video.textTracks.length === 0) return;
+
+                const track = video.textTracks[0];
+                const activeCues = track.activeCues;
+
+                if (activeCues && activeCues.length > 0) {
+                    for (let i = 0; i < activeCues.length; i++) {
+                        const cue = activeCues[i];
+
+                        if (cue.endTime > video.duration) {
+                            cue.endTime = video.duration;
+                        }
+                    }
+                }
+            }
+        );
+
+        playerManager.setSupportedMediaCommands(
+            cast.framework.messages.Command.ALL_BASIC_MEDIA |
+            cast.framework.messages.Command.QUEUE_NEXT |
+            cast.framework.messages.Command.QUEUE_PREV
+        );
+        context.start();
+
         function log(msg) {
             const div = document.getElementById('debug') || (() => {
                 const d = document.createElement('div');
@@ -195,23 +223,6 @@
             div.innerHTML += msg + '<br>';
         }
 
-
-        // playerManager.addEventListener(cast.framework.events.EventType.SEEKED, () => {
-        //     const activeIds = playerManager.getActiveTrackIds();
-        //     if (activeIds && activeIds.length > 0) {
-        //         playerManager.setActiveTrackIds([]);
-        //         setTimeout(() => {
-        //             playerManager.setActiveTrackIds(activeIds);
-        //         }, 10);
-        //     }
-        // });
-
-        playerManager.setSupportedMediaCommands(
-            cast.framework.messages.Command.ALL_BASIC_MEDIA |
-            cast.framework.messages.Command.QUEUE_NEXT |
-            cast.framework.messages.Command.QUEUE_PREV
-        );
-        context.start();
     </script>
 </body>
 
