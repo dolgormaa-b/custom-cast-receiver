@@ -164,26 +164,10 @@
             cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
             () => {
                 console.log('[EVENT] PLAYER_LOAD_COMPLETE');
-                // clearSubtitles();
-
-                // const cmp = document.querySelector('cast-media-player');
-                // if (cmp && cmp.shadowRoot) {
-                //     const oldFix = cmp.shadowRoot.querySelector('#portrait-fix');
-                //     if (oldFix) oldFix.remove();
-                // }
-
-                // const media = playerManager.getMediaInformation();
-                // if (media && media.tracks && media.tracks.length > 0) {
-                //     const subTrack = media.tracks[0];
-                //     if (subTrack && subTrack.trackContentId) {
-                //         injectSubtitle(subTrack.trackContentId, subTrack.name);
-                //     }
-                // }
 
                 setupVideoListeners();
                 fixPortraitVideo();
-                // enableSubtitles();
-                setTimeout(() => enableSubtitles(), 500);
+                enableSubtitles();
             }
         );
 
