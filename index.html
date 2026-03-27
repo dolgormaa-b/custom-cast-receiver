@@ -72,31 +72,6 @@
 
         }
 
-        function setupSubCleaner() {
-            const video = findVideo();
-            if (!video || video.hasAttribute('cleaner-added')) return;
-            video.setAttribute('cleaner-added', 'true');
-
-            video.addEventListener('timeupdate', () => {
-                if (video.textTracks && video.textTracks.length > 0) {
-                    const track = video.textTracks[0];
-                    const activeCues = track.activeCues;
-
-                    if (activeCues && activeCues.length > 0) {
-                        for (let i = 0; i < activeCues.length; i++) {
-                            const cue = activeCues[i];
-
-                            if (cue.endTime > video.duration + 5 || (cue.endTime - cue.startTime) > 30) {
-                                console.log('[SUBS] Killing stuck 11-min cue');
-                                track.mode = 'disabled';
-                                setTimeout(() => { track.mode = 'showing'; }, 50);
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
         function enableSubtitles() {
             const media = playerManager.getMediaInformation();
             // log('[SUBS] media tracks: ' + JSON.stringify(media?.tracks));
@@ -164,9 +139,37 @@
 
         fixInterval = setInterval(fixPortraitVideo, 200);
 
+        playerManager.setMessageInterceptor(
+            cast.framework.messages.MessageType.LOAD,
+            request => {
+                const video = findVideo();
+                if (video && video.textTracks) {
+                    for (let i = 0; i < video.textTracks.length; i++) {
+                        video.textTracks[i].mode = 'disabled';
+                    }
+                }
+                request.autoplay = true;
+                return request;
+            }
+        );
+
         playerManager.addEventListener(
             cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
             () => {
+
+                const video = findVideo();
+                if (video) {
+                    const oldTracks = video.querySelectorAll('track');
+                    if (oldTracks) {
+                        oldTracks.forEach(t => t.remove());
+
+                        if (video.textTracks) {
+                            for (let i = 0; i < video.textTracks.length; i++) {
+                                video.textTracks[i].mode = 'disabled';
+                            }
+                        }
+                    }
+                }
 
                 const cmp = document.querySelector('cast-media-player');
                 if (cmp && cmp.shadowRoot) {
@@ -178,7 +181,6 @@
                 fixPortraitVideo();
                 // enableSubtitles();
                 setTimeout(() => enableSubtitles(), 800);
-                // setupSubCleaner();
             }
         );
 
