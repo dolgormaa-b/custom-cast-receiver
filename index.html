@@ -86,12 +86,9 @@
                         for (let i = 0; i < activeCues.length; i++) {
                             const cue = activeCues[i];
 
-                            // If the cue end time is impossibly long (e.g., 11 mins), kill it.
-                            // Or if the cue end time is longer than the actual video duration.
                             if (cue.endTime > video.duration + 5 || (cue.endTime - cue.startTime) > 30) {
                                 console.log('[SUBS] Killing stuck 11-min cue');
                                 track.mode = 'disabled';
-                                // Re-enable after 50ms to allow fresh subs to load
                                 setTimeout(() => { track.mode = 'showing'; }, 50);
                             }
                         }
@@ -99,19 +96,6 @@
                 }
             });
         }
-
-        // function enableSubtitles() {
-        //     const tracks = playerManager.getTracks();
-
-        //     if (!tracks || tracks.length === 0) return;
-
-        //     const subtitleTrack = tracks.find(t => t.type === 'TEXT');
-
-        //     if (subtitleTrack) {
-        //         playerManager.setActiveTrackIds([subtitleTrack.trackId]);
-        //         console.log('[SUBS] Enabled via CAF');
-        //     }
-        // }
 
         function enableSubtitles() {
             const media = playerManager.getMediaInformation();
@@ -129,31 +113,6 @@
             } else {
                 // log('[SUBS] No tracks at all');
             }
-        }
-
-        let subTimer = null;
-        function injectSubtitle(vttUrl, langName) {
-            const video = findVideo();
-            if (!video || !vttUrl) return;
-
-            clearSubtitles();
-
-
-            const track = document.createElement('track');
-            if (track) {
-                track.kind = 'subtitles';
-                track.label = langName || 'Mongolian';
-                track.srclang = 'mn';
-                track.src = vttUrl;
-                track.default = true;
-                video.appendChild(track);
-
-            }
-            subTimer = setTimeout(() => {
-                if (video.textTracks && video.textTracks.length > 0) {
-                    video.textTracks[0].mode = 'showing';
-                }
-            }, 1000);
         }
 
 
@@ -205,17 +164,6 @@
 
         fixInterval = setInterval(fixPortraitVideo, 200);
 
-        // playerManager.addEventListener(
-        //     cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
-        //     () => {
-        //         console.log('[EVENT] PLAYER_LOAD_COMPLETE');
-
-        //         setupVideoListeners();
-        //         fixPortraitVideo();
-        //         enableSubtitles();
-        //     }
-        // );
-
         playerManager.addEventListener(
             cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
             () => {
@@ -230,7 +178,7 @@
                 fixPortraitVideo();
                 // enableSubtitles();
                 setTimeout(() => enableSubtitles(), 800);
-                setupSubCleaner();
+                // setupSubCleaner();
             }
         );
 
