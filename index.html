@@ -133,12 +133,12 @@
         playerManager.setMessageInterceptor(
             cast.framework.messages.MessageType.LOAD,
             request => {
-                const video = findVideo();
-                if (video && video.textTracks) {
-                    for (let i = 0; i < video.textTracks.length; i++) {
-                        video.textTracks[i].mode = 'disabled';
-                    }
-                }
+                // const video = findVideo();
+                // if (video && video.textTracks) {
+                //     for (let i = 0; i < video.textTracks.length; i++) {
+                //         video.textTracks[i].mode = 'disabled';
+                //     }
+                // }
                 request.autoplay = true;
                 return request;
             }
