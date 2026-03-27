@@ -185,15 +185,37 @@
 
                 const track = video.textTracks[0];
                 const activeCues = track.activeCues;
+                const allCues = track.cues;
 
                 if (activeCues && activeCues.length > 0) {
                     for (let i = 0; i < activeCues.length; i++) {
                         const cue = activeCues[i];
-                        const duration = cue.endTime - cue.startTime;
 
-                        if (cue.endTime > video.duration) {
-                            console.log('[SUBS] Clipping long subtitle to 5s');
-                            cue.endTime = cue.startTime + 5;
+                        const currentDuration = cue.endTime - cue.startTime;
+                        if (currentDuration > 15 || cue.endTime > video.duration) {
+
+                            const charCount = cue.text.replace(/<[^>]*>/g, '').length;
+                            const calculatedReadTime = Math.max(2, (charCount / 15) + 1);
+                            let nextStartTime = video.duration;
+                            if (allCues) {
+                                for (let j = 0; j < allCues.length; j++) {
+                                    if (allCues[j].startTime > cue.startTime) {
+                                        nextStartTime = allCues[j].startTime;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            const smartEndTime = Math.min(
+                                cue.startTime + calculatedReadTime,
+                                nextStartTime - 0.1,
+                                video.duration
+                            );
+
+                            if (cue.endTime !== smartEndTime) {
+                                console.log(`[SUBS] Smart Clipped: "${cue.text.substring(0, 15)}..." to ${smartEndTime.toFixed(2)}s`);
+                                cue.endTime = smartEndTime;
+                            }
                         }
                     }
                 }
