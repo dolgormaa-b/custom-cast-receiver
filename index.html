@@ -73,16 +73,42 @@
 
         }
 
-        function enableSubtitles() {
-            const tracks = playerManager.getTracks();
+        // function enableSubtitles() {
+        //     const tracks = playerManager.getTracks();
 
-            if (!tracks || tracks.length === 0) return;
+        //     if (!tracks || tracks.length === 0) return;
+
+        //     const subtitleTrack = tracks.find(t => t.type === 'TEXT');
+
+        //     if (subtitleTrack) {
+        //         playerManager.setActiveTrackIds([subtitleTrack.trackId]);
+        //         console.log('[SUBS] Enabled via CAF');
+        //     }
+        // }
+
+        function enableSubtitles() {
+            const video = findVideo();
+
+            if (video) {
+                const oldTracks = video.querySelectorAll('track');
+                oldTracks.forEach(t => t.remove());
+            }
+
+            const tracks = playerManager.getTracks();
+            console.log('[SUBS] Available tracks:', JSON.stringify(tracks));
+
+            if (!tracks || tracks.length === 0) {
+                console.log('[SUBS] No tracks available');
+                playerManager.setActiveTrackIds([]);
+                return;
+            }
 
             const subtitleTrack = tracks.find(t => t.type === 'TEXT');
-
             if (subtitleTrack) {
                 playerManager.setActiveTrackIds([subtitleTrack.trackId]);
-                console.log('[SUBS] Enabled via CAF');
+                console.log('[SUBS] Active track set:', subtitleTrack.trackId);
+            } else {
+                playerManager.setActiveTrackIds([]);
             }
         }
 
@@ -111,6 +137,7 @@
                 console.log('[SUBS] Activated:', vttUrl);
             }, 1000);
         }
+
 
         playerManager.setMessageInterceptor(
             cast.framework.messages.MessageType.LOAD,
@@ -160,14 +187,31 @@
 
         fixInterval = setInterval(fixPortraitVideo, 200);
 
+        // playerManager.addEventListener(
+        //     cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
+        //     () => {
+        //         console.log('[EVENT] PLAYER_LOAD_COMPLETE');
+
+        //         setupVideoListeners();
+        //         fixPortraitVideo();
+        //         enableSubtitles();
+        //     }
+        // );
+
         playerManager.addEventListener(
             cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
             () => {
                 console.log('[EVENT] PLAYER_LOAD_COMPLETE');
 
+                const cmp = document.querySelector('cast-media-player');
+                if (cmp && cmp.shadowRoot) {
+                    const oldFix = cmp.shadowRoot.querySelector('#portrait-fix');
+                    if (oldFix) oldFix.remove();
+                }
+
                 setupVideoListeners();
                 fixPortraitVideo();
-                enableSubtitles();
+                setTimeout(() => enableSubtitles(), 800);
             }
         );
 
