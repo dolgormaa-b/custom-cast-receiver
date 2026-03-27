@@ -74,8 +74,6 @@
 
         function enableSubtitles() {
             const media = playerManager.getMediaInformation();
-            // log('[SUBS] media tracks: ' + JSON.stringify(media?.tracks));
-            // log('[SUBS] activeTrackIds: ' + JSON.stringify(media?.activeTrackIds));
 
             if (media?.tracks?.length > 0) {
                 const textTrack = media.tracks.find(t => t.type === 'TEXT');
@@ -157,12 +155,12 @@
                 //     }
                 // }
 
-                // const video = findVideo();
-                // if (video && video.textTracks) {
-                //     for (let i = 0; i < video.textTracks.length; i++) {
-                //         video.textTracks[i].mode = 'disabled';
-                //     }
-                // }
+                const video = findVideo();
+                if (video && video.textTracks) {
+                    for (let i = 0; i < video.textTracks.length; i++) {
+                        video.textTracks[i].mode = 'disabled';
+                    }
+                }
 
                 const cmp = document.querySelector('cast-media-player');
                 if (cmp && cmp.shadowRoot) {
@@ -213,7 +211,6 @@
                             );
 
                             if (cue.endTime !== smartEndTime) {
-                                console.log(`[SUBS] Smart Clipped: "${cue.text.substring(0, 15)}..." to ${smartEndTime.toFixed(2)}s`);
                                 cue.endTime = smartEndTime;
                             }
                         }
