@@ -216,6 +216,27 @@
             div.innerHTML += msg + '<br>';
         }
 
+        function resetSubtitles() {
+            console.log('🧹 Reset subtitles');
+
+            playerManager.setActiveTrackIds([]);
+
+            const tracks = playerManager.getTracks();
+            if (tracks && tracks.length > 0) {
+                tracks.forEach(t => {
+                });
+            }
+        }
+
+
+        playerManager.addEventListener(
+            cast.framework.events.EventType.MEDIA_CHANGED,
+            () => {
+                console.log('[EVENT] MEDIA_CHANGED');
+
+                resetSubtitles();
+            }
+        );
 
         playerManager.setSupportedMediaCommands(
             cast.framework.messages.Command.ALL_BASIC_MEDIA |
