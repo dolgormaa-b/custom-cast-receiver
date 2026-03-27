@@ -87,28 +87,20 @@
         // }
 
         function enableSubtitles() {
-            const video = findVideo();
+            const media = playerManager.getMediaInformation();
+            log('[SUBS] media tracks: ' + JSON.stringify(media?.tracks));
+            log('[SUBS] activeTrackIds: ' + JSON.stringify(media?.activeTrackIds));
 
-            if (video) {
-                const oldTracks = video.querySelectorAll('track');
-                oldTracks.forEach(t => t.remove());
-            }
-
-            const tracks = playerManager.getTracks();
-            console.log('[SUBS] Available tracks:', JSON.stringify(tracks));
-
-            if (!tracks || tracks.length === 0) {
-                console.log('[SUBS] No tracks available');
-                playerManager.setActiveTrackIds([]);
-                return;
-            }
-
-            const subtitleTrack = tracks.find(t => t.type === 'TEXT');
-            if (subtitleTrack) {
-                playerManager.setActiveTrackIds([subtitleTrack.trackId]);
-                console.log('[SUBS] Active track set:', subtitleTrack.trackId);
+            if (media?.tracks?.length > 0) {
+                const textTrack = media.tracks.find(t => t.type === 'TEXT');
+                if (textTrack) {
+                    playerManager.setActiveTrackIds([textTrack.trackId]);
+                    log('[SUBS] Set active: ' + textTrack.trackId);
+                } else {
+                    log('[SUBS] No TEXT track found');
+                }
             } else {
-                playerManager.setActiveTrackIds([]);
+                log('[SUBS] No tracks at all');
             }
         }
 
@@ -211,9 +203,22 @@
 
                 setupVideoListeners();
                 fixPortraitVideo();
-                setTimeout(() => enableSubtitles(), 800);
+                enableSubtitles();
+                // setTimeout(() => enableSubtitles(), 800);
             }
         );
+
+        function log(msg) {
+            console.log(msg);
+            const div = document.getElementById('debug') || (() => {
+                const d = document.createElement('div');
+                d.id = 'debug';
+                d.style.cssText = 'position:fixed;top:10px;left:10px;color:lime;font-size:20px;z-index:99999;background:rgba(0,0,0,0.7);padding:10px;max-width:800px;word-break:break-all;';
+                document.body.appendChild(d);
+                return d;
+            })();
+            div.innerHTML += msg + '<br>';
+        }
 
 
         playerManager.setSupportedMediaCommands(
