@@ -219,29 +219,33 @@
 
         function resetSubtitles() {
 
-            playerManager.setActiveTrackIds([]);
+            const video = findVideo();
+            if (!video) return;
 
-            const tracks = playerManager.getTracks();
-            if (tracks && tracks.length > 0) {
-                tracks.forEach(t => {
-                });
+            const oldTracks = video.querySelectorAll('track');
+            oldTracks.forEach(t => t.remove());
+
+            if (video.textTracks) {
+                for (let i = 0; i < video.textTracks.length; i++) {
+                    video.textTracks[i].mode = 'disabled';
+                }
             }
+
+            playerManager.setActiveTrackIds([]);
         }
 
 
         playerManager.addEventListener(
-            cast.framework.events.EventType.SEEKING,
-            () => {
-                resetSubtitles();
-                enableSubtitles();
-            }
-        );
-
-        playerManager.addEventListener(
             cast.framework.events.EventType.SEEKED,
             () => {
-                resetSubtitles();
-                enableSubtitles();
+                const video = findVideo();
+                if (video && video.textTracks.length > 0) {
+                    video.textTracks[0].mode = 'disabled';
+
+                    setTimeout(() => {
+                        video.textTracks[0].mode = 'showing';
+                    }, 50);
+                }
             }
         );
 
