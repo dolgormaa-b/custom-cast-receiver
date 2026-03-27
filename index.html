@@ -201,8 +201,8 @@
 
                 setupVideoListeners();
                 fixPortraitVideo();
-                enableSubtitles();
-                // setTimeout(() => enableSubtitles(), 800);
+                // enableSubtitles();
+                setTimeout(() => enableSubtitles(), 800);
             }
         );
 
@@ -235,19 +235,19 @@
         }
 
 
-        playerManager.addEventListener(
-            cast.framework.events.EventType.SEEKED,
-            () => {
-                const video = findVideo();
-                if (video && video.textTracks.length > 0) {
-                    video.textTracks[0].mode = 'disabled';
+        // playerManager.addEventListener(
+        //     cast.framework.events.EventType.SEEKED,
+        //     () => {
+        //         const video = findVideo();
+        //         if (video && video.textTracks.length > 0) {
+        //             video.textTracks[0].mode = 'disabled';
 
-                    setTimeout(() => {
-                        video.textTracks[0].mode = 'showing';
-                    }, 50);
-                }
-            }
-        );
+        //             setTimeout(() => {
+        //                 video.textTracks[0].mode = 'showing';
+        //             }, 50);
+        //         }
+        //     }
+        // );
 
         playerManager.setSupportedMediaCommands(
             cast.framework.messages.Command.ALL_BASIC_MEDIA |
