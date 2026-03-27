@@ -81,12 +81,11 @@
                 const textTrack = media.tracks.find(t => t.type === 'TEXT');
                 if (textTrack) {
                     playerManager.setActiveTrackIds([textTrack.trackId]);
-                    // log('[SUBS] Set active: ' + textTrack.trackId);
-                } else {
-                    // log('[SUBS] No TEXT track found');
+                    const video = findVideo();
+                    if (video && video.textTracks && video.textTracks.length > 0) {
+                        video.textTracks[0].mode = 'showing';
+                    }
                 }
-            } else {
-                // log('[SUBS] No tracks at all');
             }
         }
 
@@ -145,6 +144,7 @@
             }
         );
 
+
         playerManager.addEventListener(
             cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
             () => {
@@ -176,6 +176,27 @@
             }
         );
 
+        // playerManager.addEventListener(
+        //     cast.framework.events.EventType.TIME_UPDATE,
+        //     (event) => {
+        //         const video = findVideo();
+        //         if (!video || !video.textTracks || video.textTracks.length === 0) return;
+
+        //         const track = video.textTracks[0];
+        //         const activeCues = track.activeCues;
+
+        //         if (activeCues && activeCues.length > 0) {
+        //             for (let i = 0; i < activeCues.length; i++) {
+        //                 const cue = activeCues[i];
+
+        //                 if (cue.endTime > video.duration) {
+        //                     cue.endTime = video.duration;
+        //                 }
+        //             }
+        //         }
+        //     }
+        // );
+
         playerManager.addEventListener(
             cast.framework.events.EventType.TIME_UPDATE,
             (event) => {
@@ -188,9 +209,11 @@
                 if (activeCues && activeCues.length > 0) {
                     for (let i = 0; i < activeCues.length; i++) {
                         const cue = activeCues[i];
+                        const duration = cue.endTime - cue.startTime;
 
-                        if (cue.endTime > video.duration) {
-                            cue.endTime = video.duration;
+                        if (duration > 20 || cue.endTime > video.duration) {
+                            console.log('[SUBS] Clipping long subtitle to 5s');
+                            cue.endTime = cue.startTime + 5;
                         }
                     }
                 }
