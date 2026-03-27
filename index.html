@@ -155,12 +155,12 @@
                 //     }
                 // }
 
-                const video = findVideo();
-                if (video && video.textTracks) {
-                    for (let i = 0; i < video.textTracks.length; i++) {
-                        video.textTracks[i].mode = 'disabled';
-                    }
-                }
+                // const video = findVideo();
+                // if (video && video.textTracks) {
+                //     for (let i = 0; i < video.textTracks.length; i++) {
+                //         video.textTracks[i].mode = 'disabled';
+                //     }
+                // }
 
                 const cmp = document.querySelector('cast-media-player');
                 if (cmp && cmp.shadowRoot) {
@@ -214,6 +214,18 @@
                                 cue.endTime = smartEndTime;
                             }
                         }
+                    }
+                }
+            }
+        );
+
+        playerManager.addEventListener(
+            cast.framework.events.EventType.REQUEST_LOAD,
+            () => {
+                const video = findVideo();
+                if (video && video.textTracks) {
+                    for (let i = 0; i < video.textTracks.length; i++) {
+                        video.textTracks[i].mode = 'disabled';
                     }
                 }
             }
