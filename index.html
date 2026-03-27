@@ -133,12 +133,6 @@
         playerManager.setMessageInterceptor(
             cast.framework.messages.MessageType.LOAD,
             request => {
-                // const video = findVideo();
-                // if (video && video.textTracks) {
-                //     for (let i = 0; i < video.textTracks.length; i++) {
-                //         video.textTracks[i].mode = 'disabled';
-                //     }
-                // }
                 request.autoplay = true;
                 return request;
             }
@@ -163,6 +157,13 @@
                 //     }
                 // }
 
+                // const video = findVideo();
+                // if (video && video.textTracks) {
+                //     for (let i = 0; i < video.textTracks.length; i++) {
+                //         video.textTracks[i].mode = 'disabled';
+                //     }
+                // }
+
                 const cmp = document.querySelector('cast-media-player');
                 if (cmp && cmp.shadowRoot) {
                     const oldFix = cmp.shadowRoot.querySelector('#portrait-fix');
@@ -175,27 +176,6 @@
                 setTimeout(() => enableSubtitles(), 500);
             }
         );
-
-        // playerManager.addEventListener(
-        //     cast.framework.events.EventType.TIME_UPDATE,
-        //     (event) => {
-        //         const video = findVideo();
-        //         if (!video || !video.textTracks || video.textTracks.length === 0) return;
-
-        //         const track = video.textTracks[0];
-        //         const activeCues = track.activeCues;
-
-        //         if (activeCues && activeCues.length > 0) {
-        //             for (let i = 0; i < activeCues.length; i++) {
-        //                 const cue = activeCues[i];
-
-        //                 if (cue.endTime > video.duration) {
-        //                     cue.endTime = video.duration;
-        //                 }
-        //             }
-        //         }
-        //     }
-        // );
 
         playerManager.addEventListener(
             cast.framework.events.EventType.TIME_UPDATE,
@@ -211,7 +191,7 @@
                         const cue = activeCues[i];
                         const duration = cue.endTime - cue.startTime;
 
-                        if (duration > 20 || cue.endTime > video.duration) {
+                        if (cue.endTime > video.duration) {
                             console.log('[SUBS] Clipping long subtitle to 5s');
                             cue.endTime = cue.startTime + 5;
                         }
