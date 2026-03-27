@@ -179,6 +179,23 @@
             }
         );
 
+        playerManager.addEventListener(
+            cast.framework.events.EventType.MEDIA_CHANGED,
+            () => {
+                console.log('[EVENT] MEDIA_CHANGED');
+
+                clearSubtitles();
+
+                const cmp = document.querySelector('cast-media-player');
+                if (cmp && cmp.shadowRoot) {
+                    const oldFix = cmp.shadowRoot.querySelector('#portrait-fix');
+                    if (oldFix) oldFix.remove();
+                }
+
+                setTimeout(() => enableSubtitles(), 500);
+            }
+        );
+
         playerManager.setSupportedMediaCommands(
             cast.framework.messages.Command.ALL_BASIC_MEDIA |
             cast.framework.messages.Command.QUEUE_NEXT |
