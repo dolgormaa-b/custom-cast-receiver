@@ -201,8 +201,8 @@
 
                 setupVideoListeners();
                 fixPortraitVideo();
-                // enableSubtitles();
-                setTimeout(() => enableSubtitles(), 800);
+                enableSubtitles();
+                // setTimeout(() => enableSubtitles(), 800);
             }
         );
 
@@ -218,7 +218,6 @@
         }
 
         function resetSubtitles() {
-            console.log('🧹 Reset subtitles');
 
             playerManager.setActiveTrackIds([]);
 
@@ -230,14 +229,21 @@
         }
 
 
-        // playerManager.addEventListener(
-        //     cast.framework.events.EventType.MEDIA_CHANGED,
-        //     () => {
-        //         console.log('[EVENT] MEDIA_CHANGED');
+        playerManager.addEventListener(
+            cast.framework.events.EventType.SEEKING,
+            () => {
+                resetSubtitles();
+                enableSubtitles();
+            }
+        );
 
-        //         resetSubtitles();
-        //     }
-        // );
+        playerManager.addEventListener(
+            cast.framework.events.EventType.SEEKED,
+            () => {
+                resetSubtitles();
+                enableSubtitles();
+            }
+        );
 
         playerManager.setSupportedMediaCommands(
             cast.framework.messages.Command.ALL_BASIC_MEDIA |
