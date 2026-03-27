@@ -90,14 +90,6 @@
             }
         }
 
-
-        playerManager.setMessageInterceptor(
-            cast.framework.messages.MessageType.LOAD,
-            request => {
-                return request;
-            }
-        );
-
         let isPortrait = false;
         let fixInterval = null;
 
