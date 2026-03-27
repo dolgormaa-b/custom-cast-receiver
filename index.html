@@ -219,25 +219,6 @@
                 //     }
                 // }
 
-                const cmp = document.querySelector('cast-media-player');
-                if (cmp && cmp.shadowRoot) {
-                    const style = document.createElement('style');
-                    style.id = 'queue-buttons-fix';
-                    style.textContent = `
-                .skip-previous, 
-                [class*="skip-previous"],
-                [class*="queue-prev"],
-                .previous-button { display: block !important; visibility: visible !important; }
-                
-                .skip-next,
-                [class*="skip-next"],
-                [class*="queue-next"],
-                .next-button { display: block !important; visibility: visible !important; }
-            `;
-                    if (!cmp.shadowRoot.querySelector('#queue-buttons-fix')) {
-                        cmp.shadowRoot.appendChild(style);
-                    }
-                }
 
                 setupVideoListeners();
                 fixPortraitVideo();
