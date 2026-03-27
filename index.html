@@ -54,7 +54,6 @@
                     video.textTracks[i].mode = 'disabled';
                 }
             }
-            console.log('[SUBS] Cleared');
         }
 
 
@@ -88,19 +87,19 @@
 
         function enableSubtitles() {
             const media = playerManager.getMediaInformation();
-            log('[SUBS] media tracks: ' + JSON.stringify(media?.tracks));
-            log('[SUBS] activeTrackIds: ' + JSON.stringify(media?.activeTrackIds));
+            // log('[SUBS] media tracks: ' + JSON.stringify(media?.tracks));
+            // log('[SUBS] activeTrackIds: ' + JSON.stringify(media?.activeTrackIds));
 
             if (media?.tracks?.length > 0) {
                 const textTrack = media.tracks.find(t => t.type === 'TEXT');
                 if (textTrack) {
                     playerManager.setActiveTrackIds([textTrack.trackId]);
-                    log('[SUBS] Set active: ' + textTrack.trackId);
+                    // log('[SUBS] Set active: ' + textTrack.trackId);
                 } else {
-                    log('[SUBS] No TEXT track found');
+                    // log('[SUBS] No TEXT track found');
                 }
             } else {
-                log('[SUBS] No tracks at all');
+                // log('[SUBS] No tracks at all');
             }
         }
 
@@ -126,7 +125,6 @@
                 if (video.textTracks && video.textTracks.length > 0) {
                     video.textTracks[0].mode = 'showing';
                 }
-                console.log('[SUBS] Activated:', vttUrl);
             }, 1000);
         }
 
@@ -193,7 +191,6 @@
         playerManager.addEventListener(
             cast.framework.events.EventType.PLAYER_LOAD_COMPLETE,
             () => {
-                console.log('[EVENT] PLAYER_LOAD_COMPLETE');
 
                 const cmp = document.querySelector('cast-media-player');
                 if (cmp && cmp.shadowRoot) {
@@ -203,13 +200,12 @@
 
                 setupVideoListeners();
                 fixPortraitVideo();
-                enableSubtitles();
-                // setTimeout(() => enableSubtitles(), 800);
+                // enableSubtitles();
+                setTimeout(() => enableSubtitles(), 800);
             }
         );
 
         function log(msg) {
-            console.log(msg);
             const div = document.getElementById('debug') || (() => {
                 const d = document.createElement('div');
                 d.id = 'debug';
