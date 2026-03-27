@@ -72,6 +72,34 @@
 
         }
 
+        function setupSubCleaner() {
+            const video = findVideo();
+            if (!video || video.hasAttribute('cleaner-added')) return;
+            video.setAttribute('cleaner-added', 'true');
+
+            video.addEventListener('timeupdate', () => {
+                if (video.textTracks && video.textTracks.length > 0) {
+                    const track = video.textTracks[0];
+                    const activeCues = track.activeCues;
+
+                    if (activeCues && activeCues.length > 0) {
+                        for (let i = 0; i < activeCues.length; i++) {
+                            const cue = activeCues[i];
+
+                            // If the cue end time is impossibly long (e.g., 11 mins), kill it.
+                            // Or if the cue end time is longer than the actual video duration.
+                            if (cue.endTime > video.duration + 5 || (cue.endTime - cue.startTime) > 30) {
+                                console.log('[SUBS] Killing stuck 11-min cue');
+                                track.mode = 'disabled';
+                                // Re-enable after 50ms to allow fresh subs to load
+                                setTimeout(() => { track.mode = 'showing'; }, 50);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         // function enableSubtitles() {
         //     const tracks = playerManager.getTracks();
 
@@ -202,6 +230,7 @@
                 fixPortraitVideo();
                 // enableSubtitles();
                 setTimeout(() => enableSubtitles(), 800);
+                setupSubCleaner();
             }
         );
 
